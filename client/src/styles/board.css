@@ -1,0 +1,144 @@
+.board-container {
+  display: inline-block;
+  border: 2px solid #2a2a4a;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: 480px;
+  height: 480px;
+}
+
+/* ── Squares ─────────────────────────────────────── */
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+}
+
+.square-light {
+  background-color: #f0d9b5;
+}
+
+.square-dark {
+  background-color: #b58863;
+}
+
+.square-selected {
+  outline: 3px solid #e94560;
+  outline-offset: -3px;
+  z-index: 1;
+}
+
+.square-light.square-selected {
+  background-color: #e2c08a;
+}
+
+.square-dark.square-selected {
+  background-color: #9e6e40;
+}
+
+.square:hover {
+  filter: brightness(1.05);
+}
+
+/* ── Square labels (rank/file) ─────────────────── */
+.square-label {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.square-light .square-label {
+  color: #b58863;
+}
+
+.square-dark .square-label {
+  color: #f0d9b5;
+}
+
+/* Rank labels: bottom-left of first column */
+.square:nth-child(8n+1) .square-label {
+  top: 3px;
+  left: 4px;
+}
+
+/* File labels: bottom of last row */
+.square:nth-last-child(-n+8) .square-label {
+  bottom: 3px;
+  right: 4px;
+}
+
+/* ── Pieces ─────────────────────────────────────── */
+.piece {
+  font-size: 2.6rem;
+  line-height: 1;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.08s;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+}
+
+.piece-white {
+  color: #fff;
+  -webkit-text-stroke: 1.5px #333;
+}
+
+.piece-black {
+  color: #1a1a1a;
+  -webkit-text-stroke: 1px #666;
+}
+
+.piece-draggable {
+  cursor: grab;
+}
+
+.piece-draggable:hover {
+  transform: scale(1.08);
+}
+
+.piece-draggable:active {
+  cursor: grabbing;
+}
+
+/* ── Drag-over highlight ─────────────────────────── */
+.square[data-dragover] {
+  background-color: rgba(233, 69, 96, 0.35);
+}
+
+@media (max-width: 640px) {
+  .board {
+    width: 320px;
+    height: 320px;
+  }
+
+  .piece {
+    font-size: 1.8rem;
+  }
+
+  .game-layout {
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .move-history {
+    width: 320px;
+    max-height: 200px;
+    margin-top: 0;
+  }
+}

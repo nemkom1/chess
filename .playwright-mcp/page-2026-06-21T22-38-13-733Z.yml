@@ -1,0 +1,10 @@
+- generic [ref=e4]:
+  - heading "♟ Chess Online" [level=1] [ref=e5]
+  - paragraph [ref=e6]: Шахматы в реальном времени
+  - generic [ref=e7]:
+    - textbox "Ваше имя" [ref=e8]: Friend
+    - generic [ref=e12]:
+      - textbox "Код комнаты (6 символов)" [active] [ref=e13]
+      - generic [ref=e14]:
+        - button "Войти" [disabled] [ref=e15]
+        - button "Назад" [ref=e16] [cursor=pointer]

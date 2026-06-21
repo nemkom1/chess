@@ -1,0 +1,8 @@
+- generic [ref=e4]:
+  - heading "♟ Chess Online" [level=1] [ref=e5]
+  - paragraph [ref=e6]: Шахматы в реальном времени
+  - generic [ref=e7]:
+    - textbox "Ваше имя" [active] [ref=e8]
+    - generic [ref=e9]:
+      - button "Создать игру" [disabled] [ref=e10]
+      - button "Войти по коду" [disabled] [ref=e11]
