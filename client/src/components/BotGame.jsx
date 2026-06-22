@@ -70,8 +70,11 @@ export default function BotGame({ difficulty, playerColor, onExit }) {
       setThinking(false)
     }, BOT_DELAY[difficulty])
 
-    return () => clearTimeout(timeout)
-  }, [turn, isOver])
+    return () => {
+      clearTimeout(timeout)
+      thinkingRef.current = false
+    }
+  }, [turn, isOver, botColor, difficulty])
 
   const isMyTurn = (playerColor === 'white' && turn === 'w') || (playerColor === 'black' && turn === 'b')
   const colorLabel = playerColor === 'white' ? '♔ Белые' : '♚ Чёрные'

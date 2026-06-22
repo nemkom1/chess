@@ -40,13 +40,15 @@ function registerHandlers(io, socket) {
     if (reconnected) {
       const { chess } = room
       const status = getGameStatus(chess)
+      const opponent = room.players.find(p => p.socketId !== socket.id)
       socket.emit('reconnected', {
         roomCode: code,
         color: player.color,
         fen: chess.fen(),
         turn: chess.turn(),
         history: chess.history(),
-        status
+        status,
+        opponentName: opponent?.name ?? '???'
       })
       socket.to(code).emit('opponent:reconnected')
       console.log(`${playerName} reconnected to room ${code}`)
@@ -105,18 +107,24 @@ function registerHandlers(io, socket) {
     setTimeout(() => {
       const { chess } = room
       room.players.forEach(p => {
+        const opponent = room.players.find(o => o.socketId !== p.socketId)
         io.to(p.socketId).emit('room:ready', {
           fen: chess.fen(),
           turn: chess.turn(),
-          color: p.color
+          color: p.color,
+          opponentName: opponent?.name ?? '???'
         })
       })
     }, 2000)
   })
 
   socket.on('move:attempt', ({ roomCode, from, to, promotion }) => {
-    const room = getRoom(roomCode?.toLowerCase())
-    if (!room) return
+    if (typeof from !== 'string' || typeof to !== 'string') return
+    if (!/^[a-h][1-8]$/.test(from) || !/^[a-h][1-8]$/.test(to)) return
+
+    const lowerCode = roomCode?.toLowerCase()
+    const room = getRoom(lowerCode)
+    if (!room || room.moveLock) return
 
     const player = room.players.find(p => p.socketId === socket.id)
     if (!player) return
@@ -127,12 +135,14 @@ function registerHandlers(io, socket) {
       return
     }
 
+    room.moveLock = true
     let moveResult
     try {
       moveResult = room.chess.move({ from, to, promotion: promotion || 'q' })
     } catch {
       moveResult = null
     }
+    room.moveLock = false
 
     if (!moveResult) {
       socket.emit('move:invalid', { message: 'Недопустимый ход' })
@@ -148,14 +158,23 @@ function registerHandlers(io, socket) {
       status
     }
 
-    const lowerCode = roomCode?.toLowerCase()
     io.to(lowerCode).emit('move:update', payload)
 
     if (status === 'checkmate' || status === 'stalemate' || status === 'draw') {
       const result = status === 'checkmate' ? player.color : 'draw'
       io.to(lowerCode).emit('game:over', { result, reason: status })
-      setTimeout(() => deleteRoom(lowerCode), 60000) // чистим через 1 мин
+      setTimeout(() => deleteRoom(lowerCode), 60000)
     }
+  })
+
+  socket.on('chat:message', ({ roomCode, text }) => {
+    if (typeof text !== 'string' || !text.trim() || text.length > 200) return
+    const code = roomCode?.toLowerCase()
+    const room = getRoom(code)
+    if (!room) return
+    const player = room.players.find(p => p.socketId === socket.id)
+    if (!player) return
+    io.to(code).emit('chat:message', { senderName: player.name, text: text.trim() })
   })
 
   socket.on('disconnect', () => {

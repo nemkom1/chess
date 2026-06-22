@@ -5,6 +5,7 @@ import RPS from './components/RPS'
 import Board from './components/Board'
 import StatusBar from './components/StatusBar'
 import MoveHistory from './components/MoveHistory'
+import ChatBox from './components/ChatBox'
 import BotGame from './components/BotGame'
 
 export default function App() {
@@ -14,94 +15,110 @@ export default function App() {
   const [message, setMessage] = useState(null)
   const [rpsState, setRpsState] = useState(null)
   const [botConfig, setBotConfig] = useState(null)
+  const [chatMessages, setChatMessages] = useState([])
 
-  // Ref to access latest roomInfo/phase in reconnect handler without stale closure
+  // Refs for stable access in socket handlers without stale closures
   const roomInfoRef = useRef(null)
   const phaseRef = useRef('lobby')
   roomInfoRef.current = roomInfo
   phaseRef.current = phase
 
   useEffect(() => {
-    socket.on('room:created', ({ roomCode }) => {
+    function onRoomCreated({ roomCode }) {
       setRoomInfo(prev => ({ ...prev, roomCode }))
       setPhase('waiting')
-    })
-
-    socket.on('room:joined', ({ roomCode }) => {
+    }
+    function onRoomJoined({ roomCode }) {
       setRoomInfo(prev => ({ ...prev, roomCode }))
       setPhase('waiting')
-    })
-
-    socket.on('rps:start', () => {
+    }
+    function onRpsStart() {
       setPhase('rps')
       setRpsState({ type: 'choosing' })
-    })
-
-    socket.on('rps:draw', ({ choiceA, choiceB }) => {
+    }
+    function onRpsDraw({ choiceA, choiceB }) {
       setRpsState({ type: 'draw', choiceA, choiceB })
       setTimeout(() => setRpsState({ type: 'choosing' }), 2000)
-    })
-
-    socket.on('rps:result', ({ myChoice, opponentChoice, won, color }) => {
+    }
+    function onRpsResult({ myChoice, opponentChoice, won, color }) {
       setRpsState({ type: 'result', myChoice, opponentChoice, won, color })
-    })
-
-    socket.on('room:ready', ({ fen, turn, color }) => {
-      setRoomInfo(prev => ({ playerName: prev?.playerName, roomCode: prev?.roomCode, color }))
+    }
+    function onRoomReady({ fen, turn, color, opponentName }) {
+      setRoomInfo(prev => ({ playerName: prev?.playerName, roomCode: prev?.roomCode, color, opponentName }))
       setGameState({ fen, turn, history: [], status: 'playing' })
+      setChatMessages([])
       setPhase('playing')
       setRpsState(null)
-    })
-
-    socket.on('reconnected', ({ roomCode, color, fen, turn, history, status }) => {
-      setRoomInfo(prev => ({ ...prev, roomCode, color }))
+    }
+    function onReconnected({ roomCode, color, fen, turn, history, status, opponentName }) {
+      setRoomInfo(prev => ({ ...prev, roomCode, color, opponentName }))
       setGameState({ fen, turn, history, status })
       const isOver = ['checkmate', 'stalemate', 'draw'].includes(status)
       setPhase(isOver ? 'over' : 'playing')
       setMessage(null)
-    })
-
-    socket.on('room:error', ({ message: msg }) => {
+    }
+    function onRoomError({ message: msg }) {
+      // If we got "room not found" while in-game — the room expired, reset to lobby
+      if (msg === 'Комната не найдена' && phaseRef.current !== 'lobby') {
+        setPhase('lobby')
+        setRoomInfo(null)
+        setGameState(null)
+        setChatMessages([])
+      }
       setMessage(msg)
       setTimeout(() => setMessage(null), 3000)
-    })
-
-    socket.on('move:update', ({ fen, history, turn, status }) => {
+    }
+    function onMoveUpdate({ fen, history, turn, status }) {
       setGameState({ fen, turn, history, status })
-    })
-
-    socket.on('move:invalid', ({ message: msg }) => {
+    }
+    function onMoveInvalid({ message: msg }) {
       setMessage(msg)
       setTimeout(() => setMessage(null), 2000)
-    })
-
-    socket.on('game:over', ({ result, reason }) => {
+    }
+    function onGameOver({ result, reason }) {
       setPhase('over')
       setGameState(prev => ({ ...prev, result, reason }))
-    })
-
-    socket.on('opponent:disconnected', () => {
+    }
+    function onOpponentDisconnected() {
       setMessage('Противник отключился. Он может вернуться, введя код комнаты.')
-    })
-
-    socket.on('opponent:reconnected', () => {
+    }
+    function onOpponentReconnected() {
       setMessage(null)
-    })
+    }
+    function onChatMessage({ senderName, text }) {
+      setChatMessages(prev => [...prev, { senderName, text }])
+    }
+
+    socket.on('room:created', onRoomCreated)
+    socket.on('room:joined', onRoomJoined)
+    socket.on('rps:start', onRpsStart)
+    socket.on('rps:draw', onRpsDraw)
+    socket.on('rps:result', onRpsResult)
+    socket.on('room:ready', onRoomReady)
+    socket.on('reconnected', onReconnected)
+    socket.on('room:error', onRoomError)
+    socket.on('move:update', onMoveUpdate)
+    socket.on('move:invalid', onMoveInvalid)
+    socket.on('game:over', onGameOver)
+    socket.on('opponent:disconnected', onOpponentDisconnected)
+    socket.on('opponent:reconnected', onOpponentReconnected)
+    socket.on('chat:message', onChatMessage)
 
     return () => {
-      socket.off('room:created')
-      socket.off('room:joined')
-      socket.off('rps:start')
-      socket.off('rps:draw')
-      socket.off('rps:result')
-      socket.off('room:ready')
-      socket.off('reconnected')
-      socket.off('room:error')
-      socket.off('move:update')
-      socket.off('move:invalid')
-      socket.off('game:over')
-      socket.off('opponent:disconnected')
-      socket.off('opponent:reconnected')
+      socket.off('room:created', onRoomCreated)
+      socket.off('room:joined', onRoomJoined)
+      socket.off('rps:start', onRpsStart)
+      socket.off('rps:draw', onRpsDraw)
+      socket.off('rps:result', onRpsResult)
+      socket.off('room:ready', onRoomReady)
+      socket.off('reconnected', onReconnected)
+      socket.off('room:error', onRoomError)
+      socket.off('move:update', onMoveUpdate)
+      socket.off('move:invalid', onMoveInvalid)
+      socket.off('game:over', onGameOver)
+      socket.off('opponent:disconnected', onOpponentDisconnected)
+      socket.off('opponent:reconnected', onOpponentReconnected)
+      socket.off('chat:message', onChatMessage)
     }
   }, [])
 
@@ -110,7 +127,7 @@ export default function App() {
     function handleConnect() {
       const ri = roomInfoRef.current
       const p = phaseRef.current
-      if (ri?.roomCode && ri?.playerName && p !== 'lobby') {
+      if (ri?.roomCode && ri?.playerName && p !== 'lobby' && p !== 'bot') {
         socket.emit('room:join', { roomCode: ri.roomCode, playerName: ri.playerName })
       }
     }
@@ -145,6 +162,11 @@ export default function App() {
     socket.emit('move:attempt', { roomCode: roomInfo.roomCode, from, to, promotion: 'q' })
   }
 
+  function handleChatSend(text) {
+    if (!roomInfo?.roomCode) return
+    socket.emit('chat:message', { roomCode: roomInfo.roomCode, text })
+  }
+
   function handleRestart() {
     setPhase('lobby')
     setRoomInfo(null)
@@ -152,6 +174,7 @@ export default function App() {
     setMessage(null)
     setRpsState(null)
     setBotConfig(null)
+    setChatMessages([])
   }
 
   if (phase === 'lobby') {
@@ -211,7 +234,14 @@ export default function App() {
           status={gameState?.status}
         />
       </div>
-      <MoveHistory history={gameState?.history || []} />
+      <div className="game-sidebar">
+        <MoveHistory history={gameState?.history || []} />
+        <ChatBox
+          messages={chatMessages}
+          onSend={handleChatSend}
+          playerName={roomInfo?.playerName}
+        />
+      </div>
     </div>
   )
 }
