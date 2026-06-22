@@ -82,8 +82,6 @@
 
 /* ── Pieces ─────────────────────────────────────── */
 .piece {
-  font-size: clamp(1.6rem, 5.5vw, 2.6rem);
-  line-height: 1;
   user-select: none;
   display: flex;
   align-items: center;
@@ -91,19 +89,7 @@
   width: 100%;
   height: 100%;
   transition: transform 0.08s;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
-}
-
-.piece-white {
-  color: #fffff0;
-  -webkit-text-stroke: 2.5px #1a0a00;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9));
-}
-
-.piece-black {
-  color: #0d0500;
-  -webkit-text-stroke: 1.5px #c8a84b;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.95));
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35));
 }
 
 .piece-draggable {
