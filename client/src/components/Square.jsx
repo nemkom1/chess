@@ -26,6 +26,7 @@ export default function Square({
         isLight ? 'square-light' : 'square-dark',
         isDragSource ? 'square-selected' : ''
       ].join(' ')}
+      data-sq={squareId}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >

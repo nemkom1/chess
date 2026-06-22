@@ -1,0 +1,2030 @@
+What if you could use the most powerful
+cloud-based AI models with your private
+company documents and not have a single
+piece of sensitive information ever
+leave your network? No real names, no
+financials. The cloud LLM never sees any
+of it. Let me show you what that looks
+like. So, if we jump into chat and let's
+ask the question, uh, tell me about
+Sarah Williams who is a staff member.
+So, it's carrying out a hybrid search on
+Sarah Williams and we are getting back
+some information and this is all normal.
+You would expect this from an LLM. Let's
+say it's able to search documents and
+retrieve information. But what's
+interesting is that we're using Claude
+Haiku here and Haiku has not seen any of
+this information. So if we jump into
+Langfuse into this particular trace,
+first things first, you can see the
+message that was sent in, which is tell
+me about Pamela Nelson, which is
+different to tell me about Sarah
+Williams. So we have anonymized Sarah
+Williams name to Pamela Nelson. We have
+saved that mapping into our registry in
+Superbase and then Claude Haiku triggers
+a tool call. So it's passing the query
+Pamela Nelson into our search documents
+tool. So that goes back into our system.
+We swap that back out from Pamela Nelson
+to Sarah Williams. We trigger our hybrid
+search tool which returns lots of chunks
+with confidential sensitive information.
+And then we again redact and anonymize
+that information which you can see
+there. preferred name as Pamela Nelson.
+However, that is not what's in these
+documents here. It's Sarah Williams. So,
+that redacted and anonymized information
+goes back to Haiku. And you can see some
+of these redactions here. So, there's
+the social security number as a
+redaction. We have US passport, US
+driver's license, whereas all of that
+information is actually in this file.
+Again, not necessarily representative of
+how data should be stored in a business.
+So then the response from Haiku is based
+on the search results here's what I
+found about Pamela Nelson and you get
+the full detail again which is then
+deanonymized and outputed on screen as
+you can see here. So even just for a
+simple message, there's a huge amount
+actually going on there between tool
+calls, anonymization, redaction. We're
+building this as part of our agentic rag
+series using claude code where we create
+a full AI agent web app that's grounded
+in private company knowledge. And for
+the build itself, we're using something
+new, which is Claude codes agent teams.
+This recently launched alongside Opus
+4.6 six and it lets you spin up multiple
+clawed instances in parallel, each
+owning a piece of the research process
+or a piece of the build, all coordinated
+by a team lead, as you see here. If
+you're following along with this build
+series, you can grab the requirements of
+this phase in the repo below. But if you
+want to skip ahead, the codebase is
+available to members of our community,
+the AI Automators. Within the community,
+you can clone the codebase, customize
+it, and really make it your own. So,
+you've just seen redaction and
+anonymization in action. But why does
+any of this matter? And you know the
+answer. It's privacy regulations, GDPR,
+HIPPA, CCPA, PCIDSS. And the bigger the
+business, the stricter the governance is
+going to be when implementing and
+deploying AI systems. And the risks are
+very real. AI systems are essentially
+software that can be socially
+engineered, which is quite a scary
+prospect. We're talking about things
+like prompt injection, data
+exfiltration, and if we look at what's
+at risk, we're looking at PII,
+personally identifiable information,
+medical records, financial records,
+trade secrets, and the list goes on. And
+there's lots of ways that data can leak
+from AI systems. Users within a company
+could actually input sensitive
+information or the agents themselves are
+able to interrogate private knowledge
+bases or connect via API or MCP to
+connected systems that has sensitive
+information. In our last video, we built
+out a system where you can interrogate
+file systems. So, if you don't have
+policies and careful control over the
+data that AI agents have access to, then
+there is always the potential for
+leakage. And when you send that data to
+cloud providers like Anthropic or Google
+or OpenAI, you're placing total trust
+that they're handling that data
+securely. And sometimes that trust can
+be misplaced like in the case where
+OpenAI had to reveal now anonymized chat
+GBT logs, but still it sets a precedent
+that's always a little bit scary. Most
+providers like Anthropic and OpenAI have
+data processing agreements and addendums
+to their API terms of service where they
+commit to not training on your data, not
+sharing it, not selling it, having data
+retention policies. And this is
+effectively your legal safeguard. But
+generally speaking, it's worth having a
+technical safeguard on top of that legal
+safeguard. And this technical safeguard
+can reduce the blast radius if there is
+a data leak somewhere along the chain.
+And it does this by ensuring sensitive
+data never gets sent in the first place.
+And in all honesty, the gold standard
+here is to just run the entire system
+fully airgapped behind a firewall within
+your network and you have total control
+over it. I've covered this in previous
+videos and I really love this approach,
+but there are trade-offs that you need
+to consider. And the first one being
+model intelligence. OpenAI's flagship
+5.3 model is much more capable than the
+GPT OSS 20 billion model that you may
+only be able to run locally. Thankfully,
+the local models are getting better and
+better, but until there's a real
+breakthrough on the hardware side, this
+is going to be a long-term limitation,
+which brings me to the second problem,
+which is hardware. The cost of RAM is
+skyrocketing while it's virtually
+impossible to actually get your hands on
+a decent GPU. So, if you're using cloud
+models, either by choice or you're
+forced to, the answer very well may be
+redaction and anonymization. The key is
+to strip or replace the sensitive data
+before it ever leaves your network. And
+if it's a real risk, don't put it
+anywhere near an AI system. You don't
+even need to redact if you don't connect
+it at all. We built our solution today
+on Microsoft Presidio, which is an
+open-source framework for redaction and
+anonymization. And these are two very
+different approaches. So with full
+redaction, it's essentially destructive.
+It's like one-way encryption. There's no
+way to decrypt it. So a passport number,
+for example, would translate into a
+series of asterisks, and there's no way
+to translate that back to its original
+meaning. And it's worth considering this
+for things like credit card numbers,
+which you definitely shouldn't have
+plain text anyway, bank numbers, IBNS,
+crypto keys, social security numbers,
+passports, driver's licenses, things
+like that. But again, it very much
+depends on your use case. It depends on
+what your business is about. And where
+full redaction is irreversible, the
+opposite is reversible anonymization.
+Here, for example, the name Daniel Walsh
+is identified as a person. This date is
+identified as a date. And the important
+thing is you retain a mapping of these
+keys and values. So when the LLM
+responds with this person tag, you can
+swap it back in for the name Daniel
+Walsh. And reversible anonymization is
+better suited to less sensitive
+information, but still it's information
+that you want to be able to secure.
+Things like personally identifiable
+information, locations, addresses, email
+addresses, people's names, and possibly
+then dates and times related to those
+people. So back to this idea of
+placeholders, how does it actually work?
+How do you identify that's a name and
+that's a date? Well, the important thing
+to say is that there's no single
+detection method that is sufficient on
+its own. These are layers that build
+upon each other and it starts with
+pattern matching like reax. So this
+works brilliantly for structured
+personally identifiable information.
+email addresses for example, IP
+addresses, phone numbers, things that
+have a set pattern. But it also works
+for things that have check some
+validation like credit card numbers for
+example. The second is named entity
+recognition. These are AI models that
+understand language. So it could
+recognize a name for example even though
+it's never seen it before in its
+training data. Context enhancement is
+another layer added to the system. So
+here we have an arbitrary number, but
+it's able to look before it to
+understand that this is most likely a
+social security number because it
+precedes the actual data itself. So that
+way it can boost the confidence score
+that this is a social security number.
+And even with those three layers, we're
+still not going to catch everything. So
+it's possible to use a local LLM for
+edge cases. So this works well for
+obiscated PII or just examples like 555
+here. The previous patterns would not be
+able to catch this. whereas a local LLM
+could reason over it and could figure
+out that this is a number. It could
+relate to a phone number and then it
+could boost a confident score around it.
+Microsoft Presidio doesn't yet support
+local LLMs, but it's something that you
+can build into the architecture, which
+is what I did in this system, which then
+brings us to the unfortunate truth that
+entity recognition is not perfect.
+There's lots of studies out there on
+this, but even the best systems can miss
+over 5% of sensitive entities, while
+other studies show that that can be
+dramatically higher. And this is why you
+need defense and depth. It's a layered
+approach of technical safeguards, legal
+safeguards, and organizational
+safeguards, policies, access controls.
+So when you get to the point of
+identifying entities like these
+placeholders, what do you actually do
+with them? Well, the best practice
+approach is to use surrogate data. So
+here, for example, Daniel Walsh
+translates to Toby Elliot or this date
+translates to that date. And because you
+have a mapping, you can reverse the
+process when rendering the answers to
+the users. So this sentence for example,
+Sarah Mitchell from this company
+contacted on the date regarding an
+invoice translates into these
+placeholders. It's recognized by all of
+the layers of the Prescidio library, for
+example. And then you can use the likes
+of the faker library in Python to
+generate surrogate data. So you can
+generate fake names and companies and
+feed that to the LLM. And the research
+shows that this generates much better
+responses from an LLM because it can see
+this as a coherent sentence. Whereas
+this is quite an abstract sentence just
+with the blank placeholders that can
+produce poor outputs from an LLM. So the
+main flow then is essentially a user
+asks a question. It goes through the
+anonymization layer. It assigns the
+surrogates, saves it to the registry,
+hits the cloud LLM with that modified
+message and then it goes back through
+another process to deanonymize or
+reidentify the placeholders or the
+surrogates essentially and then produces
+the response to the user. But things get
+quite complicated. So here's just a
+standard tool call. For example, message
+comes in, it's anonymized, hits the
+cloud LLM, and let's say it wants to
+trigger a vector search. So it's going
+to use the surrogate names to run the
+query. So it'll pass it back to the app.
+We need to drop in the real name, run
+the search, and then again carry out
+entity extraction, entity resolution,
+and send the modified chunks back to the
+LLM to reason over to again produce a
+response that we need to update. So when
+you have multiple tool calls, this
+becomes quite complex. Here we have a
+vector search and a text to SQL for
+example. And the reality is entity
+resolution is hard. And I'll give you
+this example here. Within an article
+that describes me, for example, I might
+be referred to as numerous names within
+that article. Daniel Walsh, D. Walsh,
+Mr. Daniel Walsh, Dan Walsh. And without
+entity resolution, simply just by having
+the Faker library generate names, each
+one of these persons that's identified
+in the text will be given a random name.
+So with entity resolution, at the very
+least, we'll be able to assign it to the
+same name, the same surrogate. And even
+better will be to create variations of
+it similar to what we have on the left.
+But this is quite difficult and in a way
+it needs an LLM to actually carry it
+out. And there's also the reversal
+problem within our system prompt for our
+cloud LLM. We're asking it to print the
+exact surrogate forms that it receives.
+That way, we can correctly reidentify
+and swap in the correct values before
+outputting to the user. And that does
+steer it in the right direction. And it
+solves a lot of problems around trying
+to identify names coming back. But
+there's just other types of questions
+that require reasoning or calculations
+that just do not work with this idea of
+surrogate values. For example, date
+calculations. How many days overdue is
+this invoice? If you're swapping in the
+real date with the fake date, you're
+clearly going to get the wrong answer.
+Or financial calculations, what's the
+VAT on this invoice total? If you have
+surrogate values for all of the items in
+an invoice, it's never going to get that
+right. Location reasoning, how far is
+the delivery address from our warehouse?
+If the person's delivery location has
+changed, it's clearly going to be wrong.
+So, these are genuine limitations with
+this approach. Before we jump into the
+architecture, I just wanted to say that
+if you find this video useful or
+helpful, uh, please give it a like below
+and make sure to subscribe to see our
+next video in this series. It really
+helps us out. This is the final version
+of our architecture for this solution.
+And before we get into it, I just want
+to talk to how I actually built this
+out. I didn't really have a full mental
+model of how this architecture was going
+to work from the start. And you'll see
+that in the build in a few minutes time.
+I initially went through a brainstorming
+stage with clawed code where I tried to
+get a handle on what it is we were
+actually building and as it turns out
+the phase one version of this just
+simply did not work. It was over
+complicated. It was confused. I
+definitely didn't help things either.
+But what's great about the likes of
+clawed code is that you can actually
+test and prototype as you go. My first
+version did not work but I needed to go
+through that process to get to the final
+version which does work. So if you are
+building along using the PRD attached,
+you will have a different experience
+than the experience that you see in this
+video because that PRD reflects the
+final version which actually works. But
+it really was actually quite a fun build
+as you'll see. So this architecture
+looks like this. We have our original
+text that comes in from the user here.
+It's this sentence that we talked about
+earlier. It goes through entity
+recognition using Microsoft Presidio. So
+it's able to identify the sensitive
+entities within the text as you can see
+there. And then we split it up into two
+different paths at this point. The first
+one is a hard redaction path. So similar
+to the presentation earlier, there are
+certain entities that I want to hard
+redact. Credit card numbers, social
+security numbers, health insurance
+numbers. So that goes through this flow
+where the Presidio library will drop in
+placeholders for any of those entities
+it recognizes. But then I have another
+local LLM call which I use as a safety
+net because Prescidio does not catch
+everything. So this passes the redacted
+text through to see are there any other
+hard redactions that we need to carry
+out and if there are it goes back wipes
+them from the text and then renders it
+to the user on the other path. Then
+these are the entities that we want to
+anonymize but we want it reversible. So
+we want to create surrogates. So once
+the entities are recognized, it goes to
+the faker library to generate surrogate
+names. And again, that example of if one
+person's name is referenced in lots of
+different variations, they're all going
+to get different surrogate values. So
+from here then we go through an entity
+resolution or clustering process. And
+there's two versions of this that I
+built. I built a local LLM version where
+we go to Quinn 38 billion and we ask
+which entities that are listed in the
+text are actually the same realworld
+entity. And there's also an algorithmic
+version of that which clusters based off
+things like nickname libraries, standard
+abbreviations, etc. So through one of
+those means, we then end up with a
+situation where we should be able to
+identify and cluster the right
+individuals. And this is really
+important for names actually more so
+than anything else. So once the entities
+are resolved, we go through the
+replacement process. We then save those
+entities, those mappings to the registry
+in Superbase. And that registry is
+thread specific. It's conversation
+specific. And you'll see that in the
+video later on where initially I went
+down the path of creating a global
+registry, which was a nonsense. It never
+was going to work. I don't know what I
+was thinking. But with the complete
+solution, it's thread specific, which I
+think makes a lot more sense. And once
+those are replaced then with the hard
+red actions also in place that new text
+is then provided to the cloud LLM as you
+see there. And that's the architecture
+in a nutshell and the current state of
+play of the overall web app. We have
+built an application that has a react
+front end and a Python back end. It uses
+superbase which I have deployed locally.
+Other people might use the remote
+version, but it uses that as a Postgres
+database, but it also uses it for
+buckets, storage, authentication, etc.
+And then the front end has a VIT dev
+server. The back end has a UVORN backend
+server, and then all of that is served
+up to the web browser. And you'll see in
+the video that I use local LLM. So, I
+have LM Studio running on my server
+here. I have Quint 3 8 billion. I have
+Quint3 uh 0.6 billion embedding model.
+All of that is local. And for the cloud
+models I use in this project, I'm using
+open router and clawed haiku, but you
+could use anything really. Okay, let's
+jump into the actual build. I hope you
+enjoy the journey. Okay, so to enable um
+these experimental agent teams, um we
+just need to set an environment
+variable. Um here I'm doing it in the
+settings.json file underneath the cloud
+folder. Now I'm running claude using the
+dangerously permissions command here. I
+have a VM set up on a hypervisor, so I
+have locked it down from a filebased
+perspective. It does have open access to
+the internet. So it's not 100% secure.
+But at the same time, there is no
+sensitive data within this application.
+There's nothing really sensitive about
+the codebase itself. So if for whatever
+reason, you know, Claude got prompt
+injected and zipped up this entire
+directory and sent it off somewhere
+else. It really isn't the end of the
+world. So I am okay running dangerously
+skip permissions within my setup here.
+Obviously though, I don't recommend you
+using it unless you know what you're
+doing and you are aware of the
+ramifications of actually running it.
+Cool. So, within the Cloud Code Agent
+Teams documentation, they do say if
+you're new to agent teams, you should
+start with a task that is a clear
+boundary that doesn't require writing
+code and it does recommend the likes of
+a research task. And we need to carry
+out research anyway on our redaction
+system that we're building. I'm looking
+to create a redaction system within our
+agent rag application here. So within
+this application, we have a knowledge
+base where we can upload documents and
+we also have an agent chat screen where
+people can chat to the LLM and it can
+then traverse or search through those
+documents to output a response. The
+agent also has access to things like SQL
+tools to query databases. So a redaction
+system should work in a number of
+different areas. on ingestion, it should
+redact when creating embeddings or for
+the likes of SQL queries, the results of
+the SQL query should be redacted. That
+way, what goes to the model is always
+anonymized. But then we also need a way
+to reverse this. So when we output text
+on screen from the agent, for example,
+we need to be swapping out the surrogate
+data with the real data. I want to use
+Microsoft Presidio for this, which seems
+to be the most popular open-source
+platform for this type of redaction.
+However, this library does not have the
+concept of a vault where you can
+actually store the surrogate data and
+what it is then mapped to the real data.
+Can you spin up an agent team to tackle
+this research? I'd like one member of
+the team to research Microsoft Presidio,
+have a look at the library, understand
+how it works, and then I'd like another
+research agent to review our current
+architecture of this app and figure out
+the touch points that we will need to
+change for this redaction system to
+actually work. things like ingesting
+documents, making sure that they're
+anonymized on ingestion, understanding
+the agent tools because if it's hitting
+thirdparty SQL tables or APIs, how do we
+anonymize as an interface between that
+and the LLM? And then how do we reverse
+all of this at the other end? And if I'm
+missing anything else here, if we need
+any other research agents, just let me
+know. So, I've just copied that in. And
+yeah, it's happy to go with those three
+research agents. And again, this is
+different to sub agents within Claude.
+These are three independent agents that
+have the ability to communicate with
+each other. It's not just a case of
+summarizing whatever a sub agent does
+back up to the main agent. So the key
+thing is that we actually keep this main
+agent concentrated on the orchestration
+and not actually carrying out tasks
+itself. Cool. So we have our precidio
+researcher, our lang chain researcher,
+and our architecture researcher. And
+this does burn tokens. We're at 112,000
+tokens within like 60 seconds here. Now,
+I am on the max plan, so I I should be
+okay. And I don't have T-Mook set up
+here. I'm on Windows, so I can't
+actually see what all of these
+researchers are doing. But we can go
+through the various different
+researchers and see what's going on. So,
+the architecture researcher, obviously,
+I can send it a message here. So, this
+is exploring the project structure and
+kind of figuring out what's going on.
+So, our Langchain researcher is
+complete. Tasks one and three are still
+in progress. So, let's jump into one of
+those. Let's go to our Prescidio
+researcher. So it carried out a couple
+of web searches. Interestingly, it
+didn't actually get clone the project
+whereas actually the lang chain
+researcher did get clone the project. So
+let's go back to the team lead. Our lang
+chain researcher has shut down
+gracefully and now the orchestrator or
+the team lead is messaging the sub
+agents to check on their status. Great.
+So all three researchers are now
+finished. They have produced reports
+which are now in the research folder
+underneath agent. And we have a little
+bit of a summary here. So for Microsoft
+Presidio 30 plus PII entity types. So
+then lang chains vault pattern. It's a
+vault which is a simple nested dict and
+then yeah faker generates type
+appropriate surrogates. Cool. So that
+way yeah we get fake names or fake
+emails or fake phone numbers as opposed
+to just placeholders. And then a little
+bit on the fuzzy matching which is going
+to be problematic I think. Architecture
+touch points. So 21 touch points
+identified 12 high, three medium, and
+six low priority ingestion, chat tools,
+streaming. Oh yeah, streaming is going
+to be an issue. We're going to need to
+get ahead of the streaming and have some
+sort of proxy. I think the chat
+interface is going to spit out token by
+token. So we'll need to buffer it
+essentially. So let me just have a look
+at the full documents. And they're not
+lacking in detail anyway. About 2,000
+words between the three documents. So
+I'll take some time just to read through
+these. The Presidio Library research
+looks pretty thorough. It's a lot of
+what I've read across the various
+documents available. Anyway, the length
+chain research document is interesting
+because it's stuff that I haven't found
+myself. So, end to-end flows on how it
+works and where the vault saving and
+lookups happen. And then for the
+architectural touch points, so we need
+to modify our ingestion pipeline. So,
+this is good. Yeah, anonymize before we
+extract metadata. Anonymize before we
+embed. We store the anonymize content in
+the full markdown as well. And then we
+have our PII to token mapping vault
+storage. Okay, I'm happy to continue
+with this. So let's tackle our
+architectural decisions. And as you can
+see, I'm using vanilla clawed code here.
+In the previous video, we used the GSD
+framework. I'm purposely not using that
+today cuz I want to test out the Asian
+teams. Okay, so we now have some
+questions to answer. So should
+embeddings be generated from original
+text or anonymized text? So let's go
+with anonymized text. There is a benefit
+to dual storage. So that way you can
+actually see what has been anonymized or
+not. And I do believe that is a
+requirement in certain regulations that
+you can actually have auditability on
+it. For the moment we'll just use the
+embed anonymized text just not to over
+complicate it. What should the scope of
+the PII vault be? This determines
+whether the same person gets the same
+placeholder across different documents.
+Do we do surrogate data per document and
+per thread or is it just per user within
+our application or is it global? And in
+a way, I think global possibly makes
+sense here because if you have a
+particular name in a document and also
+that same name is coming back from an
+SQL query, we should be able to have the
+same placeholder for that name. And in
+the same if someone is asking a question
+on the front end that involves that
+name, we need to be able to swap in that
+placeholder. It's a key architectural
+decision. This one, I think a single
+global vault makes the most sense here.
+I've just had a long back and forth with
+Claude on the architecture of this. It's
+trying to over complicate it. I think
+it's kind of mixing up authorization and
+the actual anonymization. And we have
+authorization built into the
+application. There's like role level
+security so that users that log in can
+only see their own documents. Now there
+can be shared documents globally and
+that's where a lot of the confusion is
+arising from. So I think that's okay and
+we might revisit it again if during
+testing I I spot some problems. Should
+assistant responses be stored
+deanonymized i.e. the real names are
+anonymized in the chat history database.
+That's a very good question. In theory,
+it's fine to have the real names in the
+chat history database except if you were
+continuing that conversation, we're
+going to send the thread to the LLM. So,
+in a way, it has to be the placeholders.
+I think in reality, we need to store the
+placeholders in the chat history
+database because if we continue a
+conversational thread with the LLM, that
+data is fetched from the history table
+and injected in the actual call.
+However, it's important that from a
+front- end perspective, the user sees
+the real names. So, it's more on the
+view side when we're actually pulling
+data from the chat history table to
+render via the API, let's say, from back
+end to front end that we need to do the
+swapping in and out so that the user
+only ever sees the real names, but the
+LLM only ever sees the anonymized names.
+Okay, so I think it's happy with that.
+It simplifies the architecture. It
+claims store anonymize in the database,
+i.e. the placeholders. We deanonymize at
+the API layer when serving the chat
+history, which makes sense. Should PII
+in file names and metadata be
+anonymized? Like this is where things
+get tricky because chunk metadata and
+the file name paths are going to be
+visible to an LLM. So arguably you would
+have to anonymize it. I might skip it
+for the moment because it's just going
+to add complexity. It's a phase two as
+it says exactly John Smith contract.pdf.
+Let's defer to a later phase and let's
+just focus on the actual core data
+passing back and forth. We have control
+over the metadata so we can make sure
+for example on extracting metadata that
+we don't extract PII for example. Okay,
+it's happy with that and it's asking am
+I ready to form the implementation plan?
+I'm going to prompt it to ask more
+questions because I don't know have we
+got to the bottom of this yet. We're
+okay on the context side. We're at 43%
+here. So once that gets over 50, we
+might look to finish out this process.
+Okay. What format should surrogate
+placeholder values take? This affects
+how well the LLM can reason about the
+text. Yeah. So definitely realistic
+fakes via faker. Which PII entity types
+should the system detect and anonymize?
+Precidio supports 30 plus types. More
+types equals stronger privacy but more
+aggressive redaction potential false
+positives on nonPI text. So we can do
+core PII core plus financial medical
+everything they support which includes
+locations and nationalities and dates
+configurable per deployment. Let's do
+core plus financial medical. How should
+user messages be stored in the database?
+The user types real names. Example, what
+did John Smith say about the contract?
+Store original, anonymize on the fly, or
+store anonymized. This is similar to the
+chat histories question that I' asked a
+few minutes ago. I need to think about
+this architecture. I don't need the
+database to be fully PII free. I just
+need to make sure that the LLM does not
+have access to any PII for example
+because the reason you would want to
+anonymize text for chunk embedding is
+that you don't want to send kind of your
+raw sensitive text out into the cloud.
+So that's a different use case to
+actually chat history because
+essentially any API calls is going to
+have sensitive data. Any SQL lookups is
+going to have sensitive data. So having
+the information in the database is fine.
+Okay, I think I'm happy with that. So
+the PII in the database is totally fine.
+The hard rule is the PII never reaches
+the LLM or any external service. And now
+it's asking about the document chunks as
+well. So the embeddings have to be based
+on anonymized text. So then thinking
+about it, maybe we should do both. Maybe
+we should store it anonymized. That way
+when retrieved for LLM context, it's
+fine, but then also store the original
+side by side. It never goes to the LLM,
+but we can actually see what was
+anonymized. I think we do need that even
+just from a debugging perspective to see
+is it actually working. So having this
+brainstorming and back and forth is very
+important. Like even I'm not 100% sure
+about the architecture. So it is good to
+flesh it out. Should the redaction
+system be always on? I think we're going
+to say yes, it's always on. I think from
+a series perspective, we'll probably
+just fork the library at this point
+because I know a lot of people won't
+need this level of security and
+redaction and it just adds a lot of
+bloat to the code base and a lot of kind
+of conditional logic. So what about
+documents already ingested before the
+redaction system exists? This won't
+happen. Starting with the fresh
+knowledge base and again no point over
+complicating this. The SQL tool queries
+real database tables, example sales data
+that contain real PII. When the LLM
+generates an SQL query using a fake
+name. Ah yeah, we need to swap it back
+to the real name before executing. But
+SQL tables are external. We can't
+anonymize the actual database. How
+should we handle this? So yeah, swap
+fake names back to real names in the SQL
+query before execution. Then anonymize
+the result set before returning to the
+LLM. The real database stays untouched.
+I think that has to be the way it is.
+And that would be the way it is for any
+API calls as well. And this really is
+where things get complicated. Okay. The
+LLM streams responses via SSC in small
+text chunks. A fake name like Noah ros
+could be split across chunks. We need to
+dean anonymize before sending to the
+front end. How should we handle this?
+Buffer and detect. Definitely when the
+user types a message containing real
+PII, what did John Smith say? For
+example, we anonymize it before sending
+to the LLM. But should the user see
+their original message or the anonymized
+version in the chat UI? Obviously the
+original message. Should there be any UI
+visibility into the redaction system at
+all? No, it has to be fully invisible.
+We'll look via Langfuse, for example,
+just to make sure it is actually
+working. And maybe as a phase two, we
+could build some sort of admin panel
+where you can look and see what has been
+anonymized and deanonymized. But for the
+moment, yeah, defer UI to later phase.
+The LLM may sometimes hallucinate or
+modify the fake names it was given. Noah
+Roads becomes N roads or Mr. roads
+langchain uses fuzzy matching levin
+distance for deanmization to handle
+this. Should we implement fuzzy
+matching? I think we do need to. Yeah, I
+think we definitely need to. Okay,
+there's the completed summary. I'm
+literally going to ask this question
+again. I'm just going to ask it to dive
+deeper. We'll do one more round of
+questions and then we're going to get
+going. So, entity matching is tricky.
+When John Smith appears in document A
+and John Smith appears in document B,
+should the system treat them as the same
+entity, same fake or surrogate? What
+about variations like J. Smith, John
+Smith, John A. Smith. I think it has to
+just be identical strings mapped to the
+same surrogate. John Smith is [snorts]
+different to J.Smith. We're not trying
+to create a unique ID for each name
+here. We just want to make sure that
+this information does not get to the
+LLM. So, we're not creating profiles
+essentially. It's just key value. Faker
+can generate a name that collides with a
+real entity already in the vault. For
+example, Faker generates Jane Do as a
+surrogate, but Jane Doe is a real
+person. That's a real problem. Yeah, I
+think we'll check vault before signing
+with this one to avoid a collision. From
+looking at the faker documentation, they
+say beware of the birthday paradox,
+which is that collisions are much more
+likely than you would think. So, you
+need to design around it. Are the
+documents English only or could there be
+multilingual documents? Let's go with
+English only for the moment. I'm getting
+back to this question about entity
+matching. John Smith appears in document
+A and then it's J.Smith, John A. Smith.
+The problem is if they're all completely
+different names, if they're all
+completely different placeholders, then
+that might throw off the LLM. Like this
+is obviously the same person. John A.
+Smith. If it was all in context within a
+paragraph, if it's referencing John
+Smith, J.Smith, and John A. Smith,
+there's a good chance it's the same
+person that they're talking about.
+Whereas, if these were completely
+different names, then you're going to
+lose all meaning when it comes to the
+LLM generating a response. I might ask
+it to come back to this question.
+Presidio uses any models for entity
+detection. The main options affect
+accuracy versus speed. What matters
+most? Let's go with the most accurate
+model which is a transformer model. I
+have a decent graphics card here that we
+can use. Are there any domain specific
+entity types in the documents that
+wouldn't detect out of the box? Nope.
+What should happen if Prescidio
+misidentifies something as PII? For
+example, if it detects Paris as a
+person's name instead of a city or a
+product code that looks like a phone
+number. I think we might just accept and
+move on with this. There is a confidence
+threshold that we can tweak to reduce
+it, but we're never going to get to 100%
+with this. So, the sub agents that we
+have can make their own LLM calls with
+their own streaming. They need access to
+the vault, obviously. Should this share
+the same anonymization context as the
+main agent call? Yes. Okay. So, that's
+all done. I'm just going to ask it to
+come back to that question. My concern
+is this is going to be too strict and
+we're just going to get different
+surrogates for everything. Yeah. All of
+these options aren't amazing. It's just
+adding huge amounts to the complexity. I
+think this is probably where the LLM
+redaction models might be a lot better
+as well. For the moment, let's just do
+case insensitive now and maybe smarter
+later. Okay, that's it. Let's uh kick on
+with the implementation plan. I'm going
+to describe here how we're going to use
+clawed agent teams to actually build
+this feature set. So if there's any
+features in common, let's say like
+database schemas for example, that all
+of the sub agents are going to rely on,
+I'd rather get that done up front and
+first and then if there's anything that
+can happen in parallel, at least we're
+on a solid foundation. We don't have the
+sub agents all trying to create database
+tables or just hallucinating structures.
+So we want to have all of the
+commonalities built up front and then
+built the parallel processing after
+that. Okay, so it's going to write up
+the plan. I am conscious that we're at
+50% of our context window here. So
+hopefully it doesn't hallucinate too
+much. Oh, cool. I can see that the next
+plan is number 15. So PII redaction
+system. Okay. So we have our plan
+written. PI redaction system. It's
+complex multi-phase build uh with
+foundation and parallel execution
+streams for clawed agent teams. So we're
+going to implement the plan using
+Microsoft Presidio. Ensures real PII
+never reaches the LLM or external API
+services. uses realistic fake values
+using the faker library with a global
+vault for reversible anonymization.
+Deanmization happens at the API layer
+before data is served to the front end.
+Excellent. The core principle, the user
+sees real data. Database stores real
+data. LLM sees fake data. Perfect. So,
+one thing we could also do here is
+encrypt the values in that PII vault.
+So, I think it depends on the data here.
+If they're credit card numbers, for
+example, they shouldn't be sitting plain
+text in a Postgres table. They should
+definitely be encrypted.
+If it's a first name and a last name, it
+probably doesn't need to be encrypted.
+But what's important is it doesn't go
+outside the firewall to the LLM. So for
+this, I'll leave encryption as a phase
+two, but I think it depends on the type
+of data that you're saving and how
+sensitive it actually is. So key data
+flows, ingestion, upload file, extract
+text, anonymize, store both, that's
+fine. Create embeddings from the
+anonymized text, persist vault mappings.
+Then the chat user message loads from
+the database. Anonymize user messages on
+the fly. Retrieve chunks already have
+anonymized content. Send them to the
+LLM. This is great. That's all. That all
+works pretty well. LLM generates tool
+calls with the fake names. The SQL
+deanonymizes the query, executes, and
+then anonymizes the results and returns
+to the LLM, etc. Web search. I totally
+forgot this is a tool. I might just
+delete this because for this type of
+lockdown system, I can't imagine that
+we're going to even be using web search
+as a tool. So I will just remove that.
+So phase zero is establishing the
+foundation and then phase one is the
+parallel integration stream. So they're
+all going to use this redaction service
+that's built in phase 0 and then we'll
+use our agent teams for this. So stream
+A is the ingestion pipeline integration.
+Stream B is the chat and streaming
+integration. Stream C is the tool
+integration. Okay, I think we're ready
+to go. I'm on a separate branch here.
+So, let's clear down the session. Let's
+kick off the build of phase zero. So, I
+didn't ask for an agent team, so it
+shouldn't necessarily spin one up even
+though it is enabled as an environment
+variable. And while that's working,
+let's just start up our services so that
+we can track progress. And I need docker
+up and running as well. All right, so
+local host is up and running. So, at
+least now cloud will be able to verify
+against the actual application. Okay, so
+phase zero foundation is complete. Um,
+so we have added the dependencies. I saw
+that it downloaded the spacy libraries.
+The redaction service is now in place
+which is this one. We have also created
+backend tests for the redaction service
+which is excellent. We really need to
+build this test suite out more. And then
+the database now has the PII vault table
+and let's added those columns into the
+chunks table. So let's have a look at
+those. I think we're at port 8000 and
+this is the chunks table. Anonymized
+content is there. Yeah. And this is the
+PII vault. So we have the entity type,
+the original value, the surrogate value,
+the normalized key, and just a created
+at time stamp. Excellent. Really happy
+so far. That that worked pretty
+seamlessly. So fingers crossed phase 2
+works well now with our agent teams. So
+I'll just clear down the session because
+we're already at 50% of our context
+window here. So things are getting a bit
+tight. So this is plan number 22. I
+renamed it. So let's kick off our agent
+teams to build out phase one of this
+plan. I really should install team so
+that we can see the different agents
+actually operating without having to
+jump in and out of them. Okay, so the
+orchestration is starting. So stream a
+the ingestion pipeline PII integration
+and in the meantime actually let's just
+delete out the data that's in this
+system because we said we were not going
+to make things backwards compatible. So
+let's just delete the documents. We now
+have our three agents running in
+parallel. So there's the stream A
+ingestion and it's spawning the
+remaining two agents. Let's jump into
+the stream a ingestion and it's already
+started to make the changes and there's
+our second agent which is our chat
+agent. Let's jump into him and see
+what's going on. Cool. So you are a
+teammate on team PII redaction phase
+one. Your name is stream B chat and this
+is the task that has been provided and
+that has kicked off. So we now have
+stream C which is our tools. So again
+another teammate with a detailed plan
+and that's making progress too. So let's
+go back to our team lead. So stream A is
+already finished and while that's
+working um let's spin up another cloud
+session. Actually I have one here. I'm
+building a full redaction system for our
+agentic rag application. I need test
+data to actually verify the feature
+sets. Can you create the likes of
+Notepad files that we can use as
+ingestion and make sure that these files
+contain PII information, credit card
+numbers, passport numbers, anything that
+Microsoft Presidio actually looks for
+when it's using redaction and have lots
+of different variations, first name,
+last name, abbreviations,
+etc. And then also, can you create a
+synthetic test suite for a database
+table? And we'll hook it up to the agent
+and see how our redaction actually
+works. Please drop all of these into the
+test-files folder. Okay, so that's
+running. And actually, all the streams
+are finished, which is incredible. Does
+it want me to restart the back end and
+run validation or to move on to
+something else? I would like it to
+validate obviously because you do need
+to have a cycle of plan, build, and
+verify. That being said, we're at 80% of
+our context window here. So, I'm just
+telling it that I'm going to finish the
+session and I'm asking, can you create a
+very small file to onboard the next
+agent? Okay, so the handoff is finished.
+Let's have a look at it just to make
+sure that the next agent knows what he's
+doing. So, let's clear down this
+session. Our synthetic data is ready.
+So, I'll just copy all of this out. So,
+I'm saying we're ready to take up from
+where the last agent left off. So, see
+the handoff file. Also, here's the test
+suite we can use to validate the
+features. So, it's running through the
+unit test suite. As you can see here,
+this is our test redaction service.py.
+So, now we can start doing some end to
+end tests. So, it's uploading the test
+data for us. And we have our test
+employee directory with names, phone
+numbers, date of births, passport
+numbers, driver's licenses, salary
+numbers, bank accounts, IBNS, credit
+card numbers. Yeah. Okay. Okay, I don't
+think this is very representative of how
+data is stored, but anyway, good for a
+test. And then we have customer records
+with similar sensitive information. So,
+it started doing end to end tests. It
+hasn't used sub agents, nor has it used
+an agent team. So, it has uploaded the
+document, which we can see there, and we
+can see the chunks. So, we have the
+anonymized content, and we have the
+actual content. So, the names have been
+anonymized, the email addresses. Let's
+check the vault actually. Yeah. PII
+vault. Cool. Look at this. So we have
+our original values, our surrogate
+values, the normalized names. Yes. So
+this is the case insensitive matching
+that we talked about during the planning
+phase. Then we have entity types. So
+locations, persons, SSNs, email
+addresses. So the vault's populated. Now
+it's checking the chat end to end. So
+obviously I'll do my own end toend
+testing on this and checking to see what
+code it actually produced, but nice to
+see it verify itself. Okay. And there's
+an issue with the SSC parsing. In a way,
+I would prefer if it didn't try to
+actually fix this stuff itself. If it
+just created a list of bugs that we
+could just tackle independently because
+our context window is filling up here,
+we could have multiple sub aents running
+at each individual bug. For example, so
+this is the document and in this other
+claw session that created the synthetic
+data, I'll ask it to create some prompts
+I can use to test out the functionality.
+Okay. Okay. And I'm going to stop the
+other session and I'm going to just ask
+it to uh don't try to fix the issues.
+Just create a list of bugs that we can
+work on separately. Okay. And then we
+now have our redaction test prompts
+which are here. So again, this is a
+little bit of our kind of end to end
+test suite. So I'll ask it to update our
+handover document so that we can on
+board another agent. So there's four
+bugs that we need to work on. Let's
+clear our session. Let's drag back in
+this file. And I'm going to ask, can you
+spin up multiple general purpose sub
+agents to work on these bugs? So, let's
+try to parallelize this as much as
+possible just to get it finished. Cool.
+So, it's going to spin up three agents
+in parallel. Interested to see does it
+use sub agents or the agent teams. So,
+let's see. Yeah, it has spun up sub
+agents. We don't have the main kind of
+task orchestrator agent. So, we can see
+that one has burnt 63,000 tokens. That
+one 48,000. This one 34,000. So, it is a
+tokenheavy. Yep. Yep. So, it looks like
+agent one is finished. Okay, agent two
+is done. It found and fixed four bugs.
+Okay, all done. Next steps, let's
+restart the back end. So, let's do that.
+So, we'll restart all and let's test
+things out. So, now how can we test
+things out? Normally, we would use
+Langsmith. Obviously, Langsmith is not
+local. We could use Langfuse. I don't
+have it set up on the server, though.
+For the sake of this, let's just use
+Langsmith. But if we're obviously using
+actual real world sensitive data, you
+wouldn't be necessarily saving things to
+traces on Langsmith. But we'll just use
+that for the time being. Okay. So, here
+is Langsmith. And now, if we ask a
+question, let me get back into my VM.
+What is Margaret Thompson's phone number
+and email address? Let's start there.
+All right. So, it's gone to document
+search. It can't locate Margaret
+Thompson in the search results. All
+right. And let's actually figure out
+what's going on here. So where is this
+information? So Margaret Thompson is in
+one of these files. The customer
+complaints.ext
+Acme Technologies including employee
+records. So this was our message. What
+is Margaret Thompson's phone number? And
+actually what happened was it sent what
+is Norma Fischer's phone number and
+Carol Lee address. So I think it
+replaced email with Carol Lee and it
+replaced Margaret Thompson with Norma
+Fischer and Norma Fischer is there. Ah,
+Margaret Thompson's that's the original
+value of course. Okay. So, so that
+message was sent. It then was added to
+the vault. A surrogate was created,
+Norma Fischer, and that was sent.
+However, Margaret Thompson wasn't
+already in this database, it would
+appear. Oh, no, she is. There's Margaret
+Thompson. Yeah. So, this is the entity
+resolution challenge with these systems.
+So, we have Maggie Thompson, Margaret
+Elellanor Thompson, Margaret Thompson,
+and Margaret Thompson's. And then
+there's also an email address as well.
+Okay, so elements of this are working,
+but there's a more fundamental problem.
+So it is correctly swapping out this
+kind of personal name with a surrogate.
+So Norma Fisher, you can see it there.
+For whatever reason, it's taking out
+email and dropping in Carol Lee. So
+we'll work that one out again. But the
+bigger issue is that Margaret Thompson,
+who is in this document that we
+uploaded. So this is the PII records.
+And you can see there's lots of
+variations of her name. Margaret Eleanor
+Thompson. Maggie Thompson. Margaret
+Thompson is in the email address. Maggie
+is mentioned below here. M.Th Thompson
+is there. There's lots of kind of ways
+of describing this entity and the system
+is having a lot of trouble in kind of
+resolving that to a single entity. So if
+we look here, you can see Maggie is
+Brian Hoffman. Maggie Thompson is
+Michael Wilson. Margaret Eleanor
+Thompson is Daniel Williams. Margaret
+Thompson is Ronald Garcia. Margaret
+Thompson's is Norma Fischer. You have
+all of these surrogate values and you're
+losing complete coherence on who this
+actual person is. So it's going to be
+impossible to actually output an
+accurate answer with this approach. So
+I'll throw this back to Claude just to
+analyze the codebase and see are there
+any tweaks that it could make or is this
+a fundamental limitation with the actual
+models that are in the Microsoft
+Presidio library. And for this I'll just
+use plan mode because I don't want it to
+carry out any code changes yet. We do
+have local LLMs and I still think that
+actually a solution here could be to use
+local LLMs to be able to do some sort of
+entity resolution. We use that in graph
+rag for example where an LLM actually
+extracts out entities and relationships.
+So it's definitely possible to use a
+local LLM. It'll definitely slow things
+down but we might get much better
+results and but I just want to see are
+we actually leveraging Microsoft
+Presidio as much as we possibly can out
+of the box. Yeah. And as it says it's
+not a bug. Um so we need entity
+normalization or entity linking or
+something like that and we do have a
+local LLM. So can we use a local LLM to
+actually help out with this? So I think
+the best way I can describe this is it
+is an incoherent mess fundamentally does
+not work. So I think we might need to
+change TAC a little bit on architecture
+amongst other things. And I'll just use
+this example here. So what is Margaret
+Thompson's phone number? Now we only
+have a single file in our knowledge base
+which is this employee records file.
+Margaret Thompson. In this employee
+file, you can see there's lots of
+variations of her name. Margaret Ellen
+or Thompson, preferred name, Maggie
+Thompson. We have Maggie down here. We
+have M. Thompson there. But you could
+have all these variations of someone's
+name. Miss Thompson, for example, Mrs.
+Thompson. So what's actually happened
+within our solution here is that when
+this data is processed and ingested, it
+is going through the entity recognition
+and anonymization phase. So if we open
+up the anonymized full markdown here,
+you can see that employee one which is
+Margaret Elanor Thompson, full name
+Andrew Good, preferred name Barbara
+Sanders, Michelle Brown is the email
+address. So we have some sort of name
+Hayden here. Maggie is now Terry Wells.
+Gary Pur is mentioned here. So it's an
+absolute mess. There's a total lack of
+coherence within this text. And no
+wonder the Adam doesn't know what to do
+with it. This is just a major issue when
+it comes to anonymizing and then
+deanonymizing the information. We need
+to be able to use standard placeholders
+that actually are consistent. All of
+these references are actually the same
+person. as you can see here. So what's
+happening with our system here is let's
+just copy this out. Let's bring it into
+the Microsoft Presidio demo on hugging
+face and let's just select highlight and
+paste this in. And here we can see that
+it is identifying the entities. This is
+an entity. This is an entity. So these
+are names. Robert Thompson is an
+emergency contact name. MT Thompson
+Maggie. So these are all people. So,
+Presidio is accurately extracting out
+the entities through the likes of the
+spacey libraries or reax patterns or
+whatever it is. But the problem then is
+we're using our faker library to just
+drop in surrogate names. And that's not
+sophisticated enough of a system. We
+essentially need to send this to a local
+LLM to identify that these are the same
+people and these are all the same
+references essentially. And this is just
+a major limitation to this type of
+reversible anonymization process
+particularly when you're dealing with
+this type of free text because text can
+come in any form and the LLMs are going
+to generate it in any form as well. So
+in a way you do need an LLM in the loop
+to actually be able to map these
+entities correctly for it to be somewhat
+coherent. So I think what we would need
+to do is essentially cluster these
+names. So that way we're only providing
+a single faker name for a particular
+entity. So Margaret or Maggie Thompson
+will always be referred to as the single
+same faker name. So that should improve
+coherence a little bit. You're not going
+to end up with five or six different
+names in an employee record, for
+example, when it's a single employee.
+And for that type of clustering, it
+would be best to use a local LLM. So we
+might kick off a second phase of this
+project and we might look to just
+completely simplify this architecture
+because it is overengineered and we are
+over complicating things because we have
+the ability to run local models. Maybe
+we are best just to run local
+embeddings. That way we don't need to go
+down this road of having anonymized
+chunks for documents. So we only need to
+worry about the interface between the
+LLM and the application. So as data goes
+to the LLM, we carry out redaction and
+anonymization and as it comes back we
+deanonymize. So instead maybe of having
+a global vault, let's just keep a
+conversational vault. Essentially it's
+an accumulated registry of entity
+mappings. So as the conversational
+thread develops, we keep track of the
+pseudonyms that we're actually using so
+that we can keep swapping them in and
+out. Now, using an LLM locally is
+absolutely going to add to the latency
+of this application. But I think this
+type of anonymization only really works
+if you're dealing with very structured
+inputs. And here we're dealing with a
+natural language interface where anyone
+can say anything to it. So, we do, I
+think, need some sort of a local LLM.
+Okay. So, let's have a chat with Claude
+and let's just plan out these changes.
+I'm working through the product
+requirements document for the initial
+phase and there's definitely elements of
+this that we need to rework. On the one
+hand, I could start completely from
+scratch, but there's definitely a lot
+here that we can already reuse. And for
+this, let's actually use the plan mode,
+not the edit mode. We're looking to make
+some changes to this implementation. We
+have possibly majorly over complicated
+it. I have tested it end to end and
+there are just fundamental problems with
+this approach that we have taken. Okay,
+so let's let the planning agents work
+away on that. So it's kicked off three
+sub aents as opposed to members of a
+team. So we can see one is exploring the
+PI redaction system. Another is checking
+out the ingestion flows and other is
+checking out the database schema. And
+depending on your use case um this
+amount of integration with local LLMs
+and local embedding models. You could
+just run this entire system airgapped
+depending on the number of internal
+users you have and the hardware you
+would need. But but definitely for a
+more secure implementation, you're
+better off to have this entirely
+airgapped. Let's see what local models
+we've installed here. Let's just get out
+of the sandbox. [snorts] I have lama and
+LM Studio, but maybe we'll just use LM
+Studio for this. So I have Quinn 3. Like
+these are these models are too big. 32
+billion, 20 billion. Let me just go to
+the model library. We want something
+fast. So Quinn 3. Let's try the Quinn 3
+uh 8 billion model. And let's see how it
+goes. That's set at Q4 just over 6 gigs.
+Okay, so that's downloading now. So it's
+asking which local LLM infrastructure.
+Now I do already have [snorts] this
+setup. So this application already
+integrates with local LLMs for this
+prototype. Should we also anonymize
+retrieved document chunks before they go
+to the cloud LLM or focus only on user
+messages? First, we need to create the
+entity for Margaret Thompson from that
+user message. But then also if we're
+seeing Margaret Thompson in the chunks
+that has to be the same entity. So uh
+yeah it needs to be both. Okay. So we
+have our plan. So we have phase one
+database migration. Phase two strip
+anonymization from the injection
+pipeline. Phase three rewrite or
+redaction service. So a lot of cleanup.
+It might have been easier to build this
+from scratch. Then we have our local LLM
+entity resolution prompt. So there's the
+text or detected entities candidate
+surrogates and existing registry. Okay.
+So we're just into prompt engineering at
+that point. And it's the same on the
+response deanonymization prompt. Phase
+two and three can happen in parallel.
+Then phase four, phase five and six can
+happen in parallel. Then seven, then
+nine. Yeah. Let's see. Can our agent
+teams kick off these in parallel? And
+we'll keep track of progress in our
+progress. MD file that we have in our
+cloud folder. Can you kick off a clawed
+agent team to begin the implementation
+of our new plan? Here's the link to the
+plan and only spin up workers for the
+initial phases. Also, please keep track
+of progress in the PII reduction
+progress markdown file. So, we can use
+this as a way to onboard and offboard
+agents when we run out of context. So,
+our team is progressing nicely here.
+Worker one has just finished as has
+worker two. So, we're just waiting on
+worker three to finish. Okay, so wave
+one is complete. All three parallel
+phases have finished. So, phase one, the
+database migration is done. We've uh
+stripped the anonymization from the
+ingestion flow, rewritten the redaction
+service, and cleaned up the
+requirements. There's not much I can
+actually test at this point. Context
+window is okay here at 39%. So, let's
+spin up wave two. So, our second wave
+has three more workers as part of the
+team. So, our team lead is keeping track
+of them. But if we jump into worker
+four, for example, you can see that it's
+finished its work and then it's now
+checking in on worker five. And let's
+jump into worker six. and that's
+currently progressing through its tasks.
+I really do like this flow, this agent
+team collaboration and orchestration. I
+definitely need to install T-Ux just to
+keep an eye on what they're doing, but
+the idea of having your team lead is
+quite neat. Without doing a massive
+review, I'm going to let it finish and
+then let's carry out some end toend
+tests. But I think it was really
+important that we dictated to Claude
+that when I was creating this plan to
+identify which elements can be done in
+parallel versus sequentially. We want
+workers to be building on a solid
+foundation if there is shared resources,
+shared modules, database schemas,
+whatever that is. So this has been quite
+a good approach so far. Okay, so all
+unit tests have passed. So let's uh
+actually test this out ourselves. So we
+have now local LLM entity resolution
+used for PII entity resolution. So
+that's brilliant. So let's leave open
+router for LLM configuration. For our
+embedding configuration, we are going to
+use um a local embedding model. Yeah, we
+have Quinn 3 text embeddings installed.
+So, let's load that model. So, let's go
+with our Quinn 3 8 billion model. So,
+let's load that as well. Contact length
+for this one, let's say 80,000. And then
+for local LLM, have the base URL. And
+then our model name is this one. Okay.
+So, let's save changes. And actually,
+let's just chat this model just to make
+sure it actually works. Okay. Yeah, that
+model's pretty fast. Nearly 200 tokens a
+second. So, that should be okay. So
+let's start off with uploading a
+document. So there's our employee
+records. We just drag that in. Now it
+has generated metadata which would have
+gone to the LLM. We just want to test
+out the PII detection here. Carry out a
+vector search on the name Margaret
+Thompson. So a document search for John
+John's. So it didn't return anything. So
+let's go into the documents. Let's see
+what's going on. So the document chunk
+does contain Margaret Thompson or Maggie
+Thompson. So we should have got
+something back from the vector store. So
+I can see that the LLM triggered search
+documents. It passed John John's which
+was the surrogate name executed the tool
+call. I might get clawed just to look
+into this. We probably need more tracing
+and debugging. Can you test the end
+toend flow of the search documents tool?
+It's not working properly for me. So we
+need to test with the query. And I'll
+just drop in the exact same query. Use
+the backend APIs just to speed things
+up. I'm also going to ask it to
+implement a logging file so that we can
+actually do a test on the front end and
+then open up the log file to see exactly
+what has happened line by line. Okay, so
+our login is in place and it has been
+able to recreate the issue. I'm writing
+hi on my context window here. So I'm
+going to ask it to make a note of the
+bug and I'll get another agent to look
+at it. Okay, so it claims to have fixed
+it. The tool called arguments contains
+surrogate names because the LLM only saw
+anonymized messages. No deanmization was
+applied to tool arguments before
+execution. Yeah, let's test it out
+ourselves. So, it's looking for Lori
+Gomez. So, the vector search return
+results from an employee records
+document with the name Margaret Thompson
+does not appear in the search results.
+Okay, let's open up our log. So,
+Margaret Thompson in this case is Taylor
+Edwards. Local LM call failed. Error
+400. Response format type must be JSON,
+schema, or text. Okay, so there's an
+issue. Okay, so let's try it again. So,
+it's looking for Wayne King. I can hear
+the fan go here. It's obviously
+considerably slower now with all this
+latency built in. But there you go. It
+worked. The Vexor search found one
+primary match for Margaret Ellaner
+Thompson in your knowledge base.
+Margaret Elellanar Thompson in that
+employee records report and we get
+everything. I'm fascinated to see what
+actually happened there. So let's look
+for Wayne King. So this is the first
+mention of Wayne King. At this point
+there were zero entries in the registry.
+So we have a specific thread service. So
+once surrogate was generated which was
+Wayne King it then called the entity
+resolution local LLM
+JSON object wasn't supported so it
+retried it would be nicer just to pass
+JSON schema it resolved one mapping
+persisted the new mapping to the
+database yeah thread entity registry
+there we go so this is our thread ID for
+this example thread so let's now filter
+by that ID and we have 68 entities
+across this conversation and the very
+first one was Margaret Thompson So that
+was transformed into Wayne King. Very
+nice. Look at this. So now Wayne King
+represents all of these entities.
+Margaret Thompson, the email address of
+Margaret Thompson. So I think that might
+be maybe a little bit overzealous maybe
+in how it's assigning that. So for
+example, if I ask what's her email
+address exactly? Yeah. Based on the
+document, Margaret Eleanor Thompson's
+email address is listed as Margaret
+Eleanor Thompson. It'll be a little bit
+of whack-a-ole, I think, at this point
+just to iron out the kinks. But we are
+getting a bit of an end to end working
+here which is amazing. So I'm just
+saying check out the screenshot. It
+looks like the surrogate values are
+crossing entity boundaries which doesn't
+make sense. I asked what her email
+address was and it didn't know. Okay, so
+it claims to have fixed that. What is
+her email address? We should get both
+email addresses back. Perfect. There you
+go. Her work email and her personal
+email. And now let's just check
+Langmith. So this is the question. What
+is her email address? Which triggered
+the search documents tool call. Let me
+search the employee records for Brandon
+Nash's email address. And that's the
+tool call argument. Brandon Nash email
+address contact. Now, the output of the
+tool call is showing Margaret Ellanar
+Thompson. So, there's a data leak. But I
+do wonder is that actually what's going
+to anthropic or is that just what
+Langmith can see? Yeah, that's exactly
+what I thought. So, Langsmith is tracing
+the real execution layer whereas
+Anthropic in this case only sees the
+anonymized conversational layer. So this
+is working as designed. We wouldn't use
+Langsmith anyway in production. It would
+be Langfuse which would be self-hosted
+inside the firewall. So there's no issue
+there. So let's ask the question, who
+closed the Meridian Global deal? And
+it's Michael O'Brien by all accounts.
+Interesting. So it didn't redact
+Meridian Global. Based on the search
+results, Michael O'Brien closed it. So
+that is correct. So here's our trace.
+Search documents and query sales
+database was called. Based on the search
+results, Jeffrey Lewis closed the deal.
+And here we can see it was Michael
+O'Brien. So, it was swapped in and out.
+So, yeah, this is actually working
+reasonably well. So, I just paused the
+recording and over the last few hours I
+made loads of changes, loads of bug
+fixes, performance improvements, a few
+new features. So, let's go through some
+of those because we've actually got this
+to a really good state now. And I've
+tracked all of the changes that I've
+made in my plans folder here. So, I
+usually would go into plan mode and
+cloud code. it would produce a plan and
+then I would save it here. This is good
+just to have a track of everything, but
+also if you only get halfway through a
+plan, you can clear the context window
+and then drop in the plan to say please
+continue. So the first change I made was
+I brought in hard redaction for certain
+types of entities such as credit card
+numbers, passport numbers, things like
+that. And then the second thing is up
+until now we've been using LLMs for
+entity resolution but I wanted to try
+out a simpler faster more deterministic
+approach which essentially is using reax
+parsing clustering algorithms. So even
+though it might not be as sophisticated
+as an LLM it might actually be a little
+bit more reliable. So with this change
+we now have kind of unique environment
+variables. So the first one is entity
+resolution mode. you can choose LLM or
+algorithmic and then you can list the
+entities that you want to hard redact
+versus the entities that you want to
+have surrogates created of and that way
+they're reversible. So you can see here
+for example we're using an LLM
+resolution and this ties into the next
+change I made which is I wanted to
+simplify that LLM call because that LLM
+call was getting way too sophisticated
+for a small 8 billion parameter model.
+So this change dramatically simplified
+it. It stripped away all of the noise of
+non-person related entities and it made
+the output way simpler. Just a simple
+mapping as to the clusters. So let's
+test it out here with our standard
+question. And I have LM Studio behind
+me. So you'll be able to see the actual
+calls coming through. So we'll ask our
+standard question and you can see that
+it's processing prompts, generating
+embeddings, generating tokens, and you
+can see the stream of logs through. And
+that was pretty fast. That was way
+faster than it was before thanks to that
+simplification of the input and output.
+And we're getting an accurate response
+as well. So I've changed the system
+prompt and I've steered the cloud LLM to
+make sure that when it's outputting
+persons or locations or dates that it
+keeps it consistent with what it
+actually received so that we can
+actually carry out a consistent
+deanonymization. So this is what we
+found on Margaret Elellanar Trainer and
+we're getting the preferred names back.
+Everything here is now accurate. Let's
+ask it to retrieve her full employment
+record. So, it's carrying out multiple
+document searches. I updated it so that
+we're now seeing the original name, not
+the surrogate name in the tool call. And
+again, you can see the local model is
+kicking off. We're now grepping and
+globbing because we're able to actually
+navigate the knowledge base. And now,
+another change I made was I got this to
+work for our sub agents within the
+system as well. So again if we full
+screen here you can see that this is the
+thought process of the sub aent or at
+least the output of the sub aent and
+that ties in to the output then but
+importantly these hard redactions that I
+talked about health insurance ID for
+example is redacted a driver's license
+is redacted and it's the same within the
+sub aent then you have the hard
+redactions within the sub aents process
+so there was some bugs to iron out
+around the hard redactions around tool
+calls you saw that it worked there, but
+that was because of a fix that I made
+using this plan. And with this plan, we
+actually implemented a two-phase
+approach with the local LLM. The first
+phase is entity resolution, and the
+second phase is a final pass to check,
+have any highly sensitive entities
+escaped that Presidio missed, for
+example. And if that's the case, then
+this LLM call outputs the text that
+needs to be hard redacted from the
+input. And you can see that here, for
+example. So I finally set up Langfuse on
+the server. Let's jump into this one. So
+this is provide her full employment
+record. And you can see there's lots of
+different tool calls. So this one is the
+Quinn 3 8 billion model. And here this
+is the PII detection specialist that's
+scanning for sensitive data. So this is
+a different prompt to the one you saw a
+few minutes ago. And the output then as
+you can see are particular entities that
+Prescidio missed when it was actually
+identifying entities in the text. things
+like health insurance ID for example or
+here we have CCV numbers of credit
+cards. So it's a really nice idea to
+have a final pass with a small model
+just to check is there any PII or
+sensitive information that all of the
+other algorithms have missed and I think
+Nvidia have brought out a really small
+model that specializes in this as well.
+Here we're just using Quinn 3 8 billion.
+Within this plan we added different
+thresholds for surrogates versus hard
+red actions. So surrogates, we don't
+want to have a very low threshold. Here
+we're talking about locations and names.
+So we want that to be a little bit less
+sensitive than hard redactions of credit
+card numbers or passport numbers for
+example. So that's what that job was.
+Here I was dealing with inconsistent
+surrogates. So if I asked the same
+question five times, tell me about
+Margaret Thompson, three out of five
+times it might have been able to
+actually find her details, whereas the
+other times it couldn't. And that was
+because there was an inconsistency in
+how we were assigning surrogates. So
+that one is solved. In plan 30, I
+implemented Langfuse, so updated the
+tracing. So it now supports either Lang
+Smith or Langfuse. That's just an ENV
+where you can tell which one you want.
+Plans 31 and 32 were minor bug fixes or
+stuff that I've already covered. Plan 33
+is a PII gender guesser and I found this
+was important for pronouns within the
+actual text because the likes of
+Margaret Thompson was being replaced
+with Daniel Walsh for example but then
+within the text it's referring to
+Margaret as her. So there's a Python
+library called gender guessesser which
+then means that you can use this along
+with the Faker library to generate a
+specific type of name. Um so that has
+improved things as well. 34 was a fuzzy
+collisions that I found. Again, just a
+small bug as I was testing. And number
+35 was redaction within sub agents. So
+there was elements of sub agents that
+the full redaction service was not being
+applied to. So that one is fixed as
+well. So yeah, it's in a pretty good
+nick at this moment. Let me test out a
+few more. So let's upload some more
+documents. So if we add files, I've got
+lots of test files here. So, let's go
+with incident reports, let's say. And
+then let's open that up here as well.
+So, PII incident report. I believe our
+good friend Margaret is involved in this
+one, too. The subject of a fishing email
+scam. Okay, that's completed. So, let's
+come back into our chat. Tell me about
+Margaret Thompson and any incidents that
+she was involved in. So, we have a
+number of tools here. There's obviously
+the vector search or the hybrid search,
+but then there's also the knowledgebased
+traversal, you know, GP and glob and
+list and tree. Now, it just did hybrid
+searches there, but you can see the
+security incident and all of the
+information is correctly being kind of
+replaced. As you can see here, if we go
+to the final generation of this, you can
+see it says, tell me about Rebecca
+Romero's incidents. And then the final
+output that we're getting from Claude
+Haiku in this case Rebecca Romero is a
+senior software engineer in the
+engineering department whereas we have
+it as Margaret Elanor Thompson is a
+senior software engineer. So the
+swapping in and out is working here. I
+am conscious that this only ran vector
+searches though. So let's ask for a
+comprehensive report. So now it's
+triggering the analyze document sub
+agent and it's building out a
+comprehensive report on Margaret Ellanar
+Thompson's involvement in this security
+incident. And this feedback from Claude
+Haiku in the sub agent form it is fully
+redacted. We are seeing Margaret's name
+here. But again, if we jump into
+Langfuse now, we'll be able to see that
+that's not actually what Haiku is
+processing. And this is our full report.
+And we have things redacted like IP
+addresses, social security numbers,
+credit card numbers, bank numbers,
+things that were in our test data. Now,
+obviously, I'm not saying that you
+should use an LLM for this type of use
+case, but obviously it's just a great
+way to test out this type of redaction
+and generation of surrogates to
+anonymize and deanmize. Let's drop in
+another file to test. So, let's maybe
+drop in a meeting notes. And again,
+Margaret is heavily involved here. So,
+this is an engineering update. And this
+would be a good one to test actually.
+When is Margaret due to submit the
+proposal for the upcoming conference?
+Because dates are swapped in and out. So
+interested to see does this work. Okay,
+another hybrid search. So it found a
+reference to Margaret in the meeting
+notes. She's presenting that go for a
+con. Travel has been preapproved.
+Specific deadline for when she needs to
+submit a presentation not clearly stated
+in the search results. Now I'm
+interested to see is that just a system
+prompting. Can you load the full meeting
+transcript? I'm just saying from the
+meeting notes you just described. Yeah.
+So it's now reading that document.
+January 31st, 2025. Yeah, that's it
+there. January 31st, 2025. And can we
+see was that actually anonymized? Yeah,
+it was. Yeah. The 1st of Jan 1993 is
+what Claude Haiku saw. That's brilliant.
+So, Haiku was fed that date and then in
+its response, it's providing that date
+1993. But if we come into our entity
+register, let's look for that surrogate
+value. So, let's say surrogate value is
+this. Interesting. January 31st is
+what's there. It's missing 2025, but it
+actually has it here. So, from looking
+at what's in the trace, it has two
+dates. The other one is 2004. So, that's
+probably the token for 2025. Exactly.
+There you go. That's really working so
+well. That's very good. Obviously, lots
+more testing to do with it. I've only
+loaded three documents. You know,
+obviously there's going to be knowledge
+bases of thousands of documents and API
+calls and SQL tables and stuff like
+that, but there's the bones of a decent
+architecture here. It's interesting that
+we had to go through the process of
+going down the wrong road to actually
+figure out we needed to simplify the
+architecture and just have that
+interface in between local and the cloud
+LLM and back again as opposed to trying
+to design the entire architecture around
+it. I'm sure if I did enough work up
+front, I would have figured that out
+without doing any code. But I think
+that's the beauty of the likes of Claude
+Cold is you can actually figure stuff
+out on the fly with some basic
+prototyping and let it do the coding. I
+hope you enjoyed the build. If you're
+interested in the concept of zero trust
+AI systems, then I definitely recommend
+that you check out this video here.
+Thanks so much for watching and I'll see
+you in the next

@@ -14,8 +14,9 @@ function createRoom(socketId, playerName) {
   } while (rooms.has(code))
 
   rooms.set(code, {
-    players: [{ socketId, name: playerName, color: 'white' }],
-    chess: new Chess()
+    players: [{ socketId, name: playerName, color: null, connected: true }],
+    chess: new Chess(),
+    rps: {}
   })
   return code
 }
@@ -23,10 +24,20 @@ function createRoom(socketId, playerName) {
 function joinRoom(code, socketId, playerName) {
   const room = rooms.get(code)
   if (!room) return { error: 'Комната не найдена' }
-  if (room.players.length >= 2) return { error: 'Комната уже заполнена' }
 
-  room.players.push({ socketId, name: playerName, color: 'black' })
-  return { room }
+  if (room.players.length >= 2) {
+    const disconnected = room.players.find(p => p.name === playerName && !p.connected)
+    if (disconnected) {
+      disconnected.socketId = socketId
+      disconnected.connected = true
+      return { room, reconnected: true, player: disconnected }
+    }
+    return { error: 'Комната уже заполнена' }
+  }
+
+  const player = { socketId, name: playerName, color: null, connected: true }
+  room.players.push(player)
+  return { room, reconnected: false, player }
 }
 
 function getRoom(code) {
@@ -42,16 +53,23 @@ function getRoomBySocketId(socketId) {
   return null
 }
 
-function removePlayerFromRoom(socketId) {
+function markDisconnected(socketId) {
   for (const [code, room] of rooms.entries()) {
-    const idx = room.players.findIndex(p => p.socketId === socketId)
-    if (idx !== -1) {
-      room.players.splice(idx, 1)
-      if (room.players.length === 0) rooms.delete(code)
-      return code
+    const player = room.players.find(p => p.socketId === socketId)
+    if (player) {
+      player.connected = false
+      return { code, room, player }
     }
   }
   return null
 }
 
-module.exports = { createRoom, joinRoom, getRoom, getRoomBySocketId, removePlayerFromRoom }
+function assignColors(code, winnerSocketId) {
+  const room = rooms.get(code)
+  if (!room) return
+  room.players.forEach(p => {
+    p.color = p.socketId === winnerSocketId ? 'white' : 'black'
+  })
+}
+
+module.exports = { createRoom, joinRoom, getRoom, getRoomBySocketId, markDisconnected, assignColors }

@@ -22,6 +22,11 @@ function fenToBoard(fen) {
   })
 }
 
+function squareFromPoint(x, y) {
+  const el = document.elementFromPoint(x, y)
+  return el?.closest('[data-sq]')?.dataset?.sq ?? null
+}
+
 export default function Board({ fen, playerColor, currentTurn, onMove, status }) {
   const [dragFrom, setDragFrom] = useState(null)
 
@@ -63,6 +68,22 @@ export default function Board({ fen, playerColor, currentTurn, onMove, status })
     setDragFrom(null)
   }
 
+  function handleTouchStart(e) {
+    if (!isMyTurn || isGameOver) return
+    const touch = e.touches[0]
+    const sq = squareFromPoint(touch.clientX, touch.clientY)
+    if (sq) setDragFrom(sq)
+  }
+
+  function handleTouchEnd(e) {
+    const touch = e.changedTouches[0]
+    const sq = squareFromPoint(touch.clientX, touch.clientY)
+    if (dragFrom && sq && dragFrom !== sq && isMyTurn && !isGameOver) {
+      onMove(dragFrom, sq)
+    }
+    setDragFrom(null)
+  }
+
   const squares = []
   for (let r = 0; r < 8; r++) {
     for (let f = 0; f < 8; f++) {
@@ -96,7 +117,13 @@ export default function Board({ fen, playerColor, currentTurn, onMove, status })
 
   return (
     <div className="board-container">
-      <div className="board">{squares}</div>
+      <div
+        className="board"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {squares}
+      </div>
     </div>
   )
 }
