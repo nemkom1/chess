@@ -94,13 +94,15 @@
 }
 
 .piece-white {
-  color: #fff;
-  -webkit-text-stroke: 1.5px #333;
+  color: #fffff0;
+  -webkit-text-stroke: 2.5px #1a0a00;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9));
 }
 
 .piece-black {
-  color: #1a1a1a;
-  -webkit-text-stroke: 1px #666;
+  color: #0d0500;
+  -webkit-text-stroke: 1.5px #c8a84b;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.95));
 }
 
 .piece-draggable {

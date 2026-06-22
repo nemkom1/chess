@@ -39,6 +39,7 @@ body {
 .lobby-card {
   background: var(--surface);
   border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
   border-radius: 16px;
   padding: 2.5rem 2rem;
   width: 100%;
@@ -118,6 +119,7 @@ body {
   padding: 0.65rem 1.25rem;
   transition: opacity 0.15s, transform 0.1s;
   flex: 1;
+  white-space: nowrap;
 }
 
 .btn:disabled {
@@ -237,7 +239,7 @@ body {
 .game-layout {
   display: flex;
   gap: 1.5rem;
-  align-items: flex-start;
+  align-items: center;
   padding: 1.5rem;
   min-height: 100vh;
   justify-content: center;
@@ -379,7 +381,7 @@ body {
 }
 
 .move-black {
-  color: var(--text-muted);
+  color: #bbb;
 }
 
 /* ── Scrollbar ─────────────────────────────────── */
