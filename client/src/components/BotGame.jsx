@@ -77,7 +77,6 @@ export default function BotGame({ difficulty, playerColor, onExit }) {
   }, [turn, isOver, botColor, difficulty])
 
   const isMyTurn = (playerColor === 'white' && turn === 'w') || (playerColor === 'black' && turn === 'b')
-  const colorLabel = playerColor === 'white' ? '♔ Белые' : '♚ Чёрные'
 
   function getStatusText() {
     if (status === 'checkmate') {
@@ -95,18 +94,27 @@ export default function BotGame({ difficulty, playerColor, onExit }) {
     <div className="game-layout">
       <div className="game-main">
         <div className="status-bar">
-          <div className="status-left">
-            <span className={`color-badge badge-${playerColor}`}>{colorLabel}</span>
-            <span className="player-name">vs Бот · {DIFFICULTY_LABELS[difficulty]}</span>
+          <div className="status-players-row">
+            <div className="sbar-player">
+              <span className={`color-dot dot-${playerColor}`} />
+              <span className="sbar-name">Вы</span>
+              <span className="sbar-you">({playerColor === 'white' ? 'белые' : 'чёрные'})</span>
+            </div>
+            <span className="sbar-vs">vs</span>
+            <div className="sbar-player">
+              <span className={`color-dot dot-${botColor}`} />
+              <span className="sbar-name">Бот</span>
+              <span className="sbar-you">({DIFFICULTY_LABELS[difficulty]})</span>
+            </div>
           </div>
-          <div className={`status-text status-${status}`}>{getStatusText()}</div>
-          <div className="status-right">
-            {isOver && (
-              <button className="btn btn-secondary" onClick={handleRestart}>
-                Заново
-              </button>
-            )}
-            <button className="btn btn-ghost" onClick={onExit}>Выйти</button>
+          <div className="status-game-row">
+            <span className={`status-text status-${status}`}>{getStatusText()}</span>
+            <div className="status-actions">
+              {isOver && (
+                <button className="btn-small btn-restart" onClick={handleRestart}>Заново</button>
+              )}
+              <button className="btn-small btn-restart" onClick={onExit}>Выйти</button>
+            </div>
           </div>
         </div>
         <Board
@@ -117,7 +125,9 @@ export default function BotGame({ difficulty, playerColor, onExit }) {
           status={status}
         />
       </div>
-      <MoveHistory history={history} />
+      <div className="game-sidebar">
+        <MoveHistory history={history} />
+      </div>
     </div>
   )
 }

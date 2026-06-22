@@ -7,21 +7,16 @@ export default function StatusBar({ gameState, roomInfo, phase, message, onResta
 
   const { turn, status, result } = gameState
   const myColor = roomInfo.color
-  const isMyTurn =
-    (myColor === 'white' && turn === 'w') ||
-    (myColor === 'black' && turn === 'b')
+  const oppColor = myColor === 'white' ? 'black' : 'white'
+  const isMyTurn = (myColor === 'white' && turn === 'w') || (myColor === 'black' && turn === 'b')
   const isOver = ['checkmate', 'stalemate', 'draw'].includes(status)
 
   function getStatusText() {
-    if (status === 'checkmate') {
-      return result === myColor ? '🏆 Вы выиграли! Шах и мат.' : '💀 Вы проиграли. Шах и мат.'
-    }
-    if (status === 'stalemate') return '🤝 Пат. Ничья.'
+    if (status === 'checkmate') return result === myColor ? '🏆 Вы выиграли!' : '💀 Вы проиграли.'
+    if (status === 'stalemate') return '🤝 Пат — ничья.'
     if (status === 'draw') return '🤝 Ничья.'
-    if (status === 'check') {
-      return isMyTurn ? '⚠️ Вам шах! Ваш ход.' : '⚠️ Противнику шах!'
-    }
-    return isMyTurn ? '● Ваш ход' : '○ Ход противника'
+    if (status === 'check') return isMyTurn ? '⚠️ Вам шах! Ваш ход.' : '⚠️ Шах сопернику!'
+    return isMyTurn ? '● Ваш ход' : '○ Ход соперника...'
   }
 
   function handleCopy() {
@@ -30,38 +25,33 @@ export default function StatusBar({ gameState, roomInfo, phase, message, onResta
     setTimeout(() => setCopied(false), 1500)
   }
 
-  const myLabel = myColor === 'white' ? '♔' : '♚'
-  const oppColor = myColor === 'white' ? 'black' : 'white'
-  const oppLabel = oppColor === 'white' ? '♔' : '♚'
-
   return (
     <div className="status-bar">
-      <div className="status-players">
-        <div className="status-player-row">
-          <span className={`color-badge badge-${myColor}`}>{myLabel} Вы</span>
-          <span className="player-name">{roomInfo.playerName}</span>
+      {/* Row 1: players + room code */}
+      <div className="status-players-row">
+        <div className="sbar-player">
+          <span className={`color-dot dot-${myColor}`} />
+          <span className="sbar-name">{roomInfo.playerName}</span>
+          <span className="sbar-you">(вы)</span>
         </div>
-        <span className="vs-sep">vs</span>
-        <div className="status-player-row">
-          <span className={`color-badge badge-${oppColor}`}>{oppLabel} Соперник</span>
-          <span className="player-name">{roomInfo.opponentName ?? '...'}</span>
+        <span className="sbar-vs">vs</span>
+        <div className="sbar-player">
+          <span className={`color-dot dot-${oppColor}`} />
+          <span className="sbar-name">{roomInfo.opponentName ?? '...'}</span>
         </div>
-      </div>
-
-      <div className={`status-text status-${status}`}>{getStatusText()}</div>
-
-      <div className="status-right">
-        {message && <span className="status-error">{message}</span>}
-        <button className="room-code-btn" onClick={handleCopy} title="Нажмите чтобы скопировать">
-          <span className="room-code-label">Код:</span>
-          <span className="room-code-val">{roomInfo.roomCode}</span>
-          <span className="room-code-copy">{copied ? '✓' : '⎘'}</span>
+        <button className="room-code-btn" onClick={handleCopy} title="Скопировать код комнаты">
+          {roomInfo.roomCode}&nbsp;{copied ? '✓' : '⎘'}
         </button>
-        {isOver && (
-          <button className="btn btn-secondary" onClick={onRestart}>
-            Новая игра
-          </button>
-        )}
+      </div>
+      {/* Row 2: game status */}
+      <div className="status-game-row">
+        <span className={`status-text status-${status}`}>{getStatusText()}</span>
+        <div className="status-actions">
+          {message && <span className="status-error">{message}</span>}
+          {isOver && (
+            <button className="btn-small btn-restart" onClick={onRestart}>Новая игра</button>
+          )}
+        </div>
       </div>
     </div>
   )
