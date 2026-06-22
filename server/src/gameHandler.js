@@ -1,4 +1,4 @@
-const { createRoom, joinRoom, getRoom, getRoomBySocketId, markDisconnected, assignColors } = require('./roomManager')
+const { createRoom, joinRoom, getRoom, getRoomBySocketId, markDisconnected, assignColors, deleteRoom } = require('./roomManager')
 
 function getGameStatus(chess) {
   if (chess.isCheckmate()) return 'checkmate'
@@ -17,13 +17,15 @@ function resolveRPS(choiceA, choiceB) {
 
 function registerHandlers(io, socket) {
   socket.on('room:create', ({ playerName }) => {
-    const code = createRoom(socket.id, playerName)
+    if (typeof playerName !== 'string' || !playerName.trim() || playerName.length > 30) return
+    const code = createRoom(socket.id, playerName.trim())
     socket.join(code)
     socket.emit('room:created', { roomCode: code })
     console.log(`Room ${code} created by ${playerName}`)
   })
 
   socket.on('room:join', ({ roomCode, playerName }) => {
+    if (typeof roomCode !== 'string' || typeof playerName !== 'string' || !playerName.trim()) return
     const code = roomCode.toLowerCase()
     const result = joinRoom(code, socket.id, playerName)
 
@@ -60,6 +62,7 @@ function registerHandlers(io, socket) {
   })
 
   socket.on('rps:choose', ({ roomCode, choice }) => {
+    if (!['rock', 'paper', 'scissors'].includes(choice)) return
     const code = roomCode.toLowerCase()
     const room = getRoom(code)
     if (!room) return
@@ -67,6 +70,7 @@ function registerHandlers(io, socket) {
     const player = room.players.find(p => p.socketId === socket.id)
     if (!player) return
 
+    if (room.rps[socket.id]) return  // уже выбрал — игнорируем double-click
     room.rps[socket.id] = choice
 
     const ids = Object.keys(room.rps)
@@ -111,7 +115,7 @@ function registerHandlers(io, socket) {
   })
 
   socket.on('move:attempt', ({ roomCode, from, to, promotion }) => {
-    const room = getRoom(roomCode)
+    const room = getRoom(roomCode?.toLowerCase())
     if (!room) return
 
     const player = room.players.find(p => p.socketId === socket.id)
@@ -149,6 +153,7 @@ function registerHandlers(io, socket) {
     if (status === 'checkmate' || status === 'stalemate' || status === 'draw') {
       const result = status === 'checkmate' ? player.color : 'draw'
       io.to(roomCode).emit('game:over', { result, reason: status })
+      setTimeout(() => deleteRoom(roomCode?.toLowerCase()), 60000) // чистим через 1 мин
     }
   })
 

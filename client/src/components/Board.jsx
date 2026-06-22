@@ -113,7 +113,7 @@ export default function Board({ fen, playerColor, currentTurn, onMove, status })
       const piece = getPiece(rank, file)
       const fileIdx = FILES.indexOf(file)
       const rankNum = parseInt(rank)
-      const isLight = (rankNum + fileIdx) % 2 !== 0
+      const isLight = (rankNum + fileIdx) % 2 === 0
       const showRankLabel = f === 0
       const showFileLabel = r === 7
 

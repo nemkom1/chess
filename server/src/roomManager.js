@@ -72,4 +72,8 @@ function assignColors(code, winnerSocketId) {
   })
 }
 
-module.exports = { createRoom, joinRoom, getRoom, getRoomBySocketId, markDisconnected, assignColors }
+function deleteRoom(code) {
+  rooms.delete(code)
+}
+
+module.exports = { createRoom, joinRoom, getRoom, getRoomBySocketId, markDisconnected, assignColors, deleteRoom }
