@@ -10,8 +10,8 @@
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  width: 480px;
-  height: 480px;
+  width: min(480px, 100vw);
+  height: min(480px, 100vw);
   touch-action: none;
 }
 
@@ -82,7 +82,7 @@
 
 /* ── Pieces ─────────────────────────────────────── */
 .piece {
-  font-size: 2.6rem;
+  font-size: clamp(1.6rem, 5.5vw, 2.6rem);
   line-height: 1;
   user-select: none;
   display: flex;
@@ -124,24 +124,10 @@
 }
 
 @media (max-width: 640px) {
-  .board {
-    width: 320px;
-    height: 320px;
-  }
-
-  .piece {
-    font-size: 1.8rem;
-  }
-
-  .game-layout {
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem;
-  }
-
-  .move-history {
-    width: 320px;
-    max-height: 200px;
-    margin-top: 0;
+  .board-container {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    box-shadow: none;
   }
 }

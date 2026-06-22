@@ -68,20 +68,40 @@ export default function Board({ fen, playerColor, currentTurn, onMove, status })
     setDragFrom(null)
   }
 
+  function isOwnPiece(piece) {
+    if (!piece) return false
+    return playerColor === 'white'
+      ? piece === piece.toUpperCase()
+      : piece === piece.toLowerCase()
+  }
+
   function handleTouchStart(e) {
-    if (!isMyTurn || isGameOver) return
-    const touch = e.touches[0]
-    const sq = squareFromPoint(touch.clientX, touch.clientY)
-    if (sq) setDragFrom(sq)
+    e.preventDefault()
   }
 
   function handleTouchEnd(e) {
+    e.preventDefault()
     const touch = e.changedTouches[0]
     const sq = squareFromPoint(touch.clientX, touch.clientY)
-    if (dragFrom && sq && dragFrom !== sq && isMyTurn && !isGameOver) {
-      onMove(dragFrom, sq)
+    if (!sq) return
+
+    if (!dragFrom) {
+      if (!isMyTurn || isGameOver) return
+      const piece = getPiece(sq[1], sq[0])
+      if (isOwnPiece(piece)) setDragFrom(sq)
+    } else if (sq === dragFrom) {
+      setDragFrom(null)
+    } else {
+      const piece = getPiece(sq[1], sq[0])
+      if (isOwnPiece(piece)) {
+        setDragFrom(sq)
+      } else if (isMyTurn && !isGameOver) {
+        onMove(dragFrom, sq)
+        setDragFrom(null)
+      } else {
+        setDragFrom(null)
+      }
     }
-    setDragFrom(null)
   }
 
   const squares = []

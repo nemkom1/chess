@@ -39,7 +39,7 @@ export default function App() {
     })
 
     socket.on('room:ready', ({ fen, turn, color }) => {
-      setRoomInfo(prev => ({ ...prev, color }))
+      setRoomInfo(prev => ({ playerName: prev?.playerName, roomCode: prev?.roomCode, color }))
       setGameState({ fen, turn, history: [], status: 'playing' })
       setPhase('playing')
       setRpsState(null)

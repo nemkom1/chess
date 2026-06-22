@@ -57,7 +57,7 @@ export default function Lobby({ onCreateRoom, onJoinRoom, error }) {
 
           {mode === 'create' && (
             <form onSubmit={handleCreate} className="mode-form">
-              <p className="mode-hint">Вы будете играть белыми. Создайте комнату и поделитесь кодом.</p>
+              <p className="mode-hint">Создайте комнату и поделитесь кодом с другом. Цвет определится после игры в Камень-Ножницы-Бумага.</p>
               <div className="form-row">
                 <button type="submit" className="btn btn-primary">Создать комнату</button>
                 <button type="button" className="btn btn-ghost" onClick={() => setMode(null)}>Назад</button>
