@@ -1,6 +1,12 @@
 import { useState } from 'react'
 
-export default function Lobby({ onCreateRoom, onJoinRoom, error }) {
+const DIFFICULTIES = [
+  { key: 'easy', label: 'Лёгкий', desc: 'Случайные ходы' },
+  { key: 'medium', label: 'Средний', desc: 'Думает на 2 хода вперёд' },
+  { key: 'hard', label: 'Профессионал', desc: 'Думает на 3 хода, оценивает позицию' },
+]
+
+export default function Lobby({ onCreateRoom, onJoinRoom, onPlayBot, error }) {
   const [playerName, setPlayerName] = useState('')
   const [roomCode, setRoomCode] = useState('')
   const [mode, setMode] = useState(null)
@@ -15,6 +21,11 @@ export default function Lobby({ onCreateRoom, onJoinRoom, error }) {
   function handleJoin(e) {
     e.preventDefault()
     if (nameOk && roomCode.trim()) onJoinRoom(playerName.trim(), roomCode.trim())
+  }
+
+  function handleBotDifficulty(difficulty) {
+    const color = Math.random() < 0.5 ? 'white' : 'black'
+    onPlayBot({ difficulty, playerColor: color, playerName: playerName.trim() || 'Игрок' })
   }
 
   return (
@@ -38,19 +49,14 @@ export default function Lobby({ onCreateRoom, onJoinRoom, error }) {
 
           {!mode && (
             <div className="lobby-actions">
-              <button
-                className="btn btn-primary"
-                onClick={() => setMode('create')}
-                disabled={!nameOk}
-              >
+              <button className="btn btn-primary" onClick={() => setMode('create')} disabled={!nameOk}>
                 Создать игру
               </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setMode('join')}
-                disabled={!nameOk}
-              >
+              <button className="btn btn-secondary" onClick={() => setMode('join')} disabled={!nameOk}>
                 Войти по коду
+              </button>
+              <button className="btn btn-ghost" onClick={() => setMode('bot')} disabled={!nameOk}>
+                Играть против бота
               </button>
             </div>
           )}
@@ -83,6 +89,25 @@ export default function Lobby({ onCreateRoom, onJoinRoom, error }) {
                 <button type="button" className="btn btn-ghost" onClick={() => setMode(null)}>Назад</button>
               </div>
             </form>
+          )}
+
+          {mode === 'bot' && (
+            <div className="mode-form">
+              <p className="mode-hint">Выберите сложность:</p>
+              <div className="difficulty-list">
+                {DIFFICULTIES.map(d => (
+                  <button
+                    key={d.key}
+                    className="btn btn-difficulty"
+                    onClick={() => handleBotDifficulty(d.key)}
+                  >
+                    <span className="diff-label">{d.label}</span>
+                    <span className="diff-desc">{d.desc}</span>
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="btn btn-ghost" onClick={() => setMode(null)}>Назад</button>
+            </div>
           )}
         </div>
       </div>

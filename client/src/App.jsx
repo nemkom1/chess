@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { socket } from './socket'
 import Lobby from './components/Lobby'
 import RPS from './components/RPS'
 import Board from './components/Board'
 import StatusBar from './components/StatusBar'
 import MoveHistory from './components/MoveHistory'
+import BotGame from './components/BotGame'
 
 export default function App() {
   const [phase, setPhase] = useState('lobby')
@@ -12,6 +13,13 @@ export default function App() {
   const [gameState, setGameState] = useState(null)
   const [message, setMessage] = useState(null)
   const [rpsState, setRpsState] = useState(null)
+  const [botConfig, setBotConfig] = useState(null)
+
+  // Ref to access latest roomInfo/phase in reconnect handler without stale closure
+  const roomInfoRef = useRef(null)
+  const phaseRef = useRef('lobby')
+  roomInfoRef.current = roomInfo
+  phaseRef.current = phase
 
   useEffect(() => {
     socket.on('room:created', ({ roomCode }) => {
@@ -53,8 +61,8 @@ export default function App() {
       setMessage(null)
     })
 
-    socket.on('room:error', ({ message }) => {
-      setMessage(message)
+    socket.on('room:error', ({ message: msg }) => {
+      setMessage(msg)
       setTimeout(() => setMessage(null), 3000)
     })
 
@@ -62,8 +70,8 @@ export default function App() {
       setGameState({ fen, turn, history, status })
     })
 
-    socket.on('move:invalid', ({ message }) => {
-      setMessage(message)
+    socket.on('move:invalid', ({ message: msg }) => {
+      setMessage(msg)
       setTimeout(() => setMessage(null), 2000)
     })
 
@@ -97,6 +105,19 @@ export default function App() {
     }
   }, [])
 
+  // Auto-rejoin room after socket.io reconnect (new socket ID, same room)
+  useEffect(() => {
+    function handleConnect() {
+      const ri = roomInfoRef.current
+      const p = phaseRef.current
+      if (ri?.roomCode && ri?.playerName && p !== 'lobby') {
+        socket.emit('room:join', { roomCode: ri.roomCode, playerName: ri.playerName })
+      }
+    }
+    socket.on('connect', handleConnect)
+    return () => socket.off('connect', handleConnect)
+  }, [])
+
   function handleCreateRoom(playerName) {
     setRoomInfo({ playerName })
     setMessage(null)
@@ -107,6 +128,11 @@ export default function App() {
     setRoomInfo({ playerName })
     setMessage(null)
     socket.emit('room:join', { roomCode: roomCode.toLowerCase(), playerName })
+  }
+
+  function handlePlayBot(config) {
+    setBotConfig(config)
+    setPhase('bot')
   }
 
   function handleRPSChoice(choice) {
@@ -125,10 +151,21 @@ export default function App() {
     setGameState(null)
     setMessage(null)
     setRpsState(null)
+    setBotConfig(null)
   }
 
   if (phase === 'lobby') {
-    return <Lobby onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} error={message} />
+    return <Lobby onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} onPlayBot={handlePlayBot} error={message} />
+  }
+
+  if (phase === 'bot') {
+    return (
+      <BotGame
+        difficulty={botConfig.difficulty}
+        playerColor={botConfig.playerColor}
+        onExit={handleRestart}
+      />
+    )
   }
 
   if (phase === 'waiting') {

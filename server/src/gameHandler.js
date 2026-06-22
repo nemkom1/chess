@@ -148,12 +148,13 @@ function registerHandlers(io, socket) {
       status
     }
 
-    io.to(roomCode).emit('move:update', payload)
+    const lowerCode = roomCode?.toLowerCase()
+    io.to(lowerCode).emit('move:update', payload)
 
     if (status === 'checkmate' || status === 'stalemate' || status === 'draw') {
       const result = status === 'checkmate' ? player.color : 'draw'
-      io.to(roomCode).emit('game:over', { result, reason: status })
-      setTimeout(() => deleteRoom(roomCode?.toLowerCase()), 60000) // чистим через 1 мин
+      io.to(lowerCode).emit('game:over', { result, reason: status })
+      setTimeout(() => deleteRoom(lowerCode), 60000) // чистим через 1 мин
     }
   })
 
